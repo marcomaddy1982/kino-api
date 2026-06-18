@@ -10,9 +10,18 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_18_110320) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_18_115042) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "list_items", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "list_id", null: false
+    t.integer "tmdb_movie_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["list_id", "tmdb_movie_id"], name: "index_list_items_on_list_id_and_tmdb_movie_id", unique: true
+    t.index ["list_id"], name: "index_list_items_on_list_id"
+  end
 
   create_table "lists", force: :cascade do |t|
     t.datetime "created_at", null: false
@@ -31,5 +40,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_110320) do
     t.index ["tmdb_account_id"], name: "index_users_on_tmdb_account_id", unique: true
   end
 
+  add_foreign_key "list_items", "lists"
   add_foreign_key "lists", "users"
 end
