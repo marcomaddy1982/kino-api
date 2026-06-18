@@ -22,7 +22,7 @@ module ActiveSupport
     end
 
     def stub_tmdb_account(session_id: "fake-session-id", account_id: 123)
-      stub_request(:get, "#{ENV["TMDB_API_BASE_URL"]}/3/account")
+      stub_request(:get, "#{ENV["TMDB_API_BASE_URL"]}/account")
         .with(query: hash_including("session_id" => session_id))
         .to_return(
           status: 200,

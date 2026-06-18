@@ -10,9 +10,19 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_14_205919) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_18_110320) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "lists", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.boolean "is_favourite", default: false, null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id"], name: "index_lists_on_user_id"
+    t.index ["user_id"], name: "index_lists_on_user_id_favourite", unique: true, where: "(is_favourite = true)"
+  end
 
   create_table "users", force: :cascade do |t|
     t.datetime "created_at", null: false
@@ -20,4 +30,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_14_205919) do
     t.datetime "updated_at", null: false
     t.index ["tmdb_account_id"], name: "index_users_on_tmdb_account_id", unique: true
   end
+
+  add_foreign_key "lists", "users"
 end
