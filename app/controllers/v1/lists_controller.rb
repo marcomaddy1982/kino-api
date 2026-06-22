@@ -3,6 +3,7 @@ module V1
     before_action :set_list, only: [:destroy]
 
     def index
+      ListService.find_or_create_favourites(current_user)
       lists = current_user.lists.order(created_at: :desc)
       render json: ListBlueprint.render(lists)
     end
