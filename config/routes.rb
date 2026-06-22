@@ -7,6 +7,7 @@ Rails.application.routes.draw do
     end
     namespace :favourites do
       resources :items, only: [:show], param: :tmdb_movie_id
+      post "items/:tmdb_movie_id/toggle", to: "items#toggle", as: :toggle_item
     end
   end
 end
