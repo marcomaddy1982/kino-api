@@ -22,6 +22,19 @@ class V1::ListsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 2, body.length
   end
 
+  test "index returns item_count for each list" do
+    list = ListService.create(@user, name: "Watchlist")
+    ListItemService.add(list, tmdb_movie_id: 550)
+    ListItemService.add(list, tmdb_movie_id: 680)
+
+    get v1_lists_path, headers: @headers, as: :json
+
+    assert_response :ok
+    body = JSON.parse(response.body)
+    watchlist = body.find { |l| l["name"] == "Watchlist" }
+    assert_equal 2, watchlist["itemCount"]
+  end
+
   test "index returns 401 without auth header" do
     get v1_lists_path, as: :json
     assert_response :unauthorized

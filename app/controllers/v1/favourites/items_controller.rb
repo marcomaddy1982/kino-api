@@ -4,7 +4,7 @@ module V1
       def show
         favourites = ListService.find_or_create_favourites(current_user)
         is_favourite = favourites.list_items.exists?(tmdb_movie_id: params[:tmdb_movie_id])
-        render json: { is_favourite: is_favourite }, status: :ok
+        render json: { isFavourite: is_favourite }, status: :ok
       end
 
       def toggle
@@ -13,10 +13,10 @@ module V1
 
         if item
           item.destroy!
-          render json: { is_favourite: false }, status: :ok
+          render json: { isFavourite: false }, status: :ok
         else
           favourites.list_items.create!(tmdb_movie_id: params[:tmdb_movie_id])
-          render json: { is_favourite: true }, status: :ok
+          render json: { isFavourite: true }, status: :ok
         end
       end
     end

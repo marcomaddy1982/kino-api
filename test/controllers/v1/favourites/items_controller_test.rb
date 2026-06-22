@@ -18,7 +18,7 @@ class V1::Favourites::ItemsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :ok
     body = JSON.parse(response.body)
-    assert_equal true, body["is_favourite"]
+    assert_equal true, body["isFavourite"]
   end
 
   test "show returns is_favourite false when movie is not in favourites" do
@@ -26,7 +26,7 @@ class V1::Favourites::ItemsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :ok
     body = JSON.parse(response.body)
-    assert_equal false, body["is_favourite"]
+    assert_equal false, body["isFavourite"]
   end
 
   test "show returns 401 without auth header" do
@@ -41,7 +41,7 @@ class V1::Favourites::ItemsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :ok
     body = JSON.parse(response.body)
-    assert_equal true, body["is_favourite"]
+    assert_equal true, body["isFavourite"]
     assert @favourites.list_items.exists?(tmdb_movie_id: 550)
   end
 
@@ -51,7 +51,7 @@ class V1::Favourites::ItemsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :ok
     body = JSON.parse(response.body)
-    assert_equal false, body["is_favourite"]
+    assert_equal false, body["isFavourite"]
     assert_not @favourites.list_items.exists?(tmdb_movie_id: 550)
   end
 
