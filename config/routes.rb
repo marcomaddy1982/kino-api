@@ -5,5 +5,8 @@ Rails.application.routes.draw do
     resources :lists, only: [:index, :create, :destroy] do
       resources :list_items, only: [:create, :destroy], path: "items"
     end
+    namespace :favourites do
+      resources :items, only: [:show], param: :tmdb_movie_id
+    end
   end
 end
