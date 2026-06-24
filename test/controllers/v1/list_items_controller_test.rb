@@ -13,6 +13,8 @@ class V1::ListItemsControllerTest < ActionDispatch::IntegrationTest
 
   # GET /v1/lists/:list_id/items
   test "index returns all items for the list" do
+    stub_tmdb_movie(tmdb_movie_id: 550, title: "Fight Club", poster_path: "/fc.jpg")
+    stub_tmdb_movie(tmdb_movie_id: 680, title: "Pulp Fiction", poster_path: "/pf.jpg")
     ListItemService.add(@list, tmdb_movie_id: 550)
     ListItemService.add(@list, tmdb_movie_id: 680)
     get v1_list_list_items_path(@list), headers: @headers, as: :json
@@ -22,6 +24,8 @@ class V1::ListItemsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 2, body.length
     assert_includes body.map { |i| i["tmdbMovieId"] }, 550
     assert_includes body.map { |i| i["tmdbMovieId"] }, 680
+    assert_includes body.map { |i| i["title"] }, "Fight Club"
+    assert_includes body.map { |i| i["title"] }, "Pulp Fiction"
   end
 
   test "index returns empty array when list has no items" do

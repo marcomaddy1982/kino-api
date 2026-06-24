@@ -3,7 +3,13 @@ module V1
     before_action :set_list
 
     def index
-      render json: ListItemBlueprint.render(@list.list_items), status: :ok
+      items = @list.list_items
+      tmdb_details = items.each_with_object({}) do |item, hash|
+        hash[item.tmdb_movie_id] = TmdbMovieService.fetch_movie(item.tmdb_movie_id)
+      rescue StandardError
+        hash[item.tmdb_movie_id] = {}
+      end
+      render json: ListItemBlueprint.render(items, root: false, tmdb_details: tmdb_details), status: :ok
     end
 
     def create
