@@ -3,13 +3,12 @@ module V1
     before_action :set_list
 
     def index
-      items = @list.list_items
-      tmdb_details = items.each_with_object({}) do |item, hash|
-        hash[item.tmdb_movie_id] = TmdbMovieService.fetch_movie(item.tmdb_movie_id)
+      movies = @list.list_items.filter_map do |item|
+        TmdbMovieService.fetch_movie(item.tmdb_movie_id)
       rescue StandardError
-        hash[item.tmdb_movie_id] = {}
+        nil
       end
-      render json: ListItemBlueprint.render(items, root: false, tmdb_details: tmdb_details), status: :ok
+      render json: movies, status: :ok
     end
 
     def create
