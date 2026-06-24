@@ -22,7 +22,7 @@ module ActiveSupport
     end
 
     def stub_tmdb_movie(tmdb_movie_id:, title: "Test Movie", poster_path: "/test.jpg")
-      stub_request(:get, "https://api.themoviedb.org/movie/#{tmdb_movie_id}")
+      stub_request(:get, "#{ENV["TMDB_API_BASE_URL"]}/movie/#{tmdb_movie_id}")
         .with(headers: { "Authorization" => "Bearer #{ENV["TMDB_ACCESS_TOKEN"]}" })
         .to_return(
           status: 200,
@@ -32,7 +32,7 @@ module ActiveSupport
     end
 
     def stub_tmdb_account(session_id: "fake-session-id", account_id: 123)
-      stub_request(:get, "https://api.themoviedb.org/3/account")
+      stub_request(:get, "#{ENV["TMDB_API_BASE_URL"]}/account")
         .with(
           query: hash_including("session_id" => session_id),
           headers: { "Authorization" => "Bearer #{ENV["TMDB_ACCESS_TOKEN"]}" }

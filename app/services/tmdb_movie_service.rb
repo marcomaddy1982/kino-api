@@ -1,10 +1,10 @@
 class TmdbMovieService
-  API_BASE_URL = "https://api.themoviedb.org"
+  API_BASE_URL = ENV.fetch("TMDB_API_BASE_URL")
   ACCESS_TOKEN = ENV.fetch("TMDB_ACCESS_TOKEN")
 
   class << self
     def fetch_movie(tmdb_movie_id)
-      response = connection.get("/movie/#{tmdb_movie_id}") do |req|
+      response = connection.get("movie/#{tmdb_movie_id}") do |req|
         req.headers["Authorization"] = "Bearer #{ACCESS_TOKEN}"
         req.headers["Accept"] = "application/json"
       end
