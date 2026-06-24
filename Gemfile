@@ -6,6 +6,7 @@ gem "puma", ">= 5.0"
 gem "blueprinter", "~> 1.1"
 gem "faraday", "~> 2.0"
 gem "rack-cors"
+gem "thruster", require: false
 gem "bootsnap", require: false
 gem "tzinfo-data", platforms: %i[windows jruby]
 
