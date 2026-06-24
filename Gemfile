@@ -4,7 +4,7 @@ gem "rails", "~> 8.1.3"
 gem "pg", "~> 1.1"
 gem "puma", ">= 5.0"
 gem "blueprinter", "~> 1.1"
-gem "faraday", "~> 2.0"
+gem "faraday", "~> 2.14"
 gem "rack-cors"
 gem "thruster", require: false
 gem "bootsnap", require: false
