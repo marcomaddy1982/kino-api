@@ -26,7 +26,7 @@ module ActiveSupport
         .with(headers: { "Authorization" => "Bearer #{ENV["TMDB_ACCESS_TOKEN"]}" })
         .to_return(
           status: 200,
-          body: { id: tmdb_movie_id, title: title, poster_path: poster_path, vote_average: vote_average, release_date: release_date }.to_json,
+          body: { id: tmdb_movie_id, title:, poster_path:, vote_average:, release_date: }.to_json,
           headers: { "Content-Type" => "application/json" }
         )
     end

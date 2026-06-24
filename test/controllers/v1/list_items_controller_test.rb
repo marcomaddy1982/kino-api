@@ -22,8 +22,8 @@ class V1::ListItemsControllerTest < ActionDispatch::IntegrationTest
     assert_response :ok
     body = JSON.parse(response.body)
     assert_equal 2, body.length
-    assert_includes body.map { |i| i["tmdbMovieId"] }, 550
-    assert_includes body.map { |i| i["tmdbMovieId"] }, 680
+    assert_includes body.map { |i| i["id"] }, 550
+    assert_includes body.map { |i| i["id"] }, 680
     assert_includes body.map { |i| i["title"] }, "Fight Club"
     assert_includes body.map { |i| i["title"] }, "Pulp Fiction"
   end

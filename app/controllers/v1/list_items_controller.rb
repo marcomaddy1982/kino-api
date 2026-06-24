@@ -14,7 +14,7 @@ module V1
 
     def create
       item = ListItemService.add(@list, tmdb_movie_id: params.require(:tmdb_movie_id))
-      render json: ListItemBlueprint.render(item), status: :created
+      render json: { tmdbMovieId: item.tmdb_movie_id }, status: :created
     end
 
     def destroy

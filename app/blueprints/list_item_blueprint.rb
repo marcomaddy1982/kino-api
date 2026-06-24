@@ -1,7 +1,7 @@
 class ListItemBlueprint < Blueprinter::Base
-  identifier :id
-
-  fields :tmdb_movie_id, :created_at
+  field :id do |item, options|
+    options[:tmdb_details]&.dig(item.tmdb_movie_id, "id")
+  end
 
   field :title do |item, options|
     options[:tmdb_details]&.dig(item.tmdb_movie_id, "title")

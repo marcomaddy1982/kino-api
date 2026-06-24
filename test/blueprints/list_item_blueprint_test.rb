@@ -11,23 +11,22 @@ class ListItemBlueprintTest < ActiveSupport::TestCase
     @user.destroy
   end
 
-  TMDB_DETAILS = { 550 => { "title" => "Fight Club", "poster_path" => "/fc.jpg", "vote_average" => 8.4, "release_date" => "1999-10-15" } }.freeze
+  TMDB_DETAILS = { 550 => { "id" => 550, "title" => "Fight Club", "poster_path" => "/fc.jpg", "vote_average" => 8.4, "release_date" => "1999-10-15" } }.freeze
 
-  test "renders expected camelCase keys" do
+  test "renders expected keys matching TMDB shape" do
     result = ListItemBlueprint.render_as_hash(@item, tmdb_details: TMDB_DETAILS)
     assert result.key?(:id)
-    assert result.key?(:tmdbMovieId)
-    assert result.key?(:createdAt)
     assert result.key?(:title)
     assert result.key?(:posterPath)
     assert result.key?(:voteAverage)
     assert result.key?(:releaseDate)
+    refute result.key?(:tmdbMovieId)
+    refute result.key?(:createdAt)
   end
 
   test "renders correct values" do
     result = ListItemBlueprint.render_as_hash(@item, tmdb_details: TMDB_DETAILS)
-    assert_equal @item.id, result[:id]
-    assert_equal 550, result[:tmdbMovieId]
+    assert_equal 550, result[:id]
     assert_equal "Fight Club", result[:title]
     assert_equal "/fc.jpg", result[:posterPath]
     assert_equal 8.4, result[:voteAverage]
@@ -36,6 +35,7 @@ class ListItemBlueprintTest < ActiveSupport::TestCase
 
   test "renders nil fields when tmdb_details missing" do
     result = ListItemBlueprint.render_as_hash(@item, tmdb_details: {})
+    assert_nil result[:id]
     assert_nil result[:title]
     assert_nil result[:posterPath]
     assert_nil result[:voteAverage]
