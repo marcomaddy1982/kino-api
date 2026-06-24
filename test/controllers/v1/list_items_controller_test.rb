@@ -11,6 +11,41 @@ class V1::ListItemsControllerTest < ActionDispatch::IntegrationTest
     @user.destroy
   end
 
+  # GET /v1/lists/:list_id/items
+  test "index returns all items for the list" do
+    ListItemService.add(@list, tmdb_movie_id: 550)
+    ListItemService.add(@list, tmdb_movie_id: 680)
+    get v1_list_list_items_path(@list), headers: @headers, as: :json
+
+    assert_response :ok
+    body = JSON.parse(response.body)
+    assert_equal 2, body.length
+    assert_includes body.map { |i| i["tmdbMovieId"] }, 550
+    assert_includes body.map { |i| i["tmdbMovieId"] }, 680
+  end
+
+  test "index returns empty array when list has no items" do
+    get v1_list_list_items_path(@list), headers: @headers, as: :json
+
+    assert_response :ok
+    assert_equal [], JSON.parse(response.body)
+  end
+
+  test "index returns 404 for a list belonging to another user" do
+    other_user = User.create!(tmdb_account_id: 789)
+    other_list = ListService.create(other_user, name: "Other")
+    get v1_list_list_items_path(other_list), headers: @headers, as: :json
+
+    assert_response :not_found
+  ensure
+    other_user.destroy
+  end
+
+  test "index returns 401 without auth header" do
+    get v1_list_list_items_path(@list), as: :json
+    assert_response :unauthorized
+  end
+
   # POST /v1/lists/:list_id/items
   test "create adds a movie to the list" do
     post v1_list_list_items_path(@list), params: { tmdb_movie_id: 550 }, headers: @headers, as: :json
