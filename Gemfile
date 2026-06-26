@@ -17,6 +17,7 @@ group :development, :test do
   gem "bundler-audit", require: false
   gem "standard", require: false
   gem "rubocop-rails", require: false
+  gem "rubocop-rails-omakase", require: false
 end
 
 group :test do

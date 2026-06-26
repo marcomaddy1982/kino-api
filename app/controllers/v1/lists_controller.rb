@@ -1,6 +1,6 @@
 module V1
   class ListsController < ::ApplicationController
-    before_action :set_list, only: [:destroy]
+    before_action :set_list, only: [ :destroy ]
 
     def index
       ListService.find_or_create_favourites(current_user)
