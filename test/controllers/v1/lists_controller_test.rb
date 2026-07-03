@@ -2,8 +2,8 @@ require "test_helper"
 
 class V1::ListsControllerTest < ActionDispatch::IntegrationTest
   setup do
-    @user = User.create!(tmdb_account_id: 123)
-    @headers = auth_header
+    @user = User.create!(email: "user@example.com", password: "password", name: "Test User")
+    @headers = auth_header(user: @user)
   end
 
   teardown do
@@ -69,7 +69,7 @@ class V1::ListsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "destroy returns 404 for a list belonging to another user" do
-    other_user = User.create!(tmdb_account_id: 456)
+    other_user = User.create!(email: "other@example.com", password: "password", name: "Other User")
     other_list = ListService.create(other_user, name: "Someone else's list")
 
     delete v1_list_path(other_list), headers: @headers, as: :json

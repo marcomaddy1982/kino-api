@@ -9,11 +9,13 @@ class ApplicationController < ActionController::API
   private
 
   def authenticate!
-    session_id = bearer_token
-    raise KinoErrors::AuthenticationError unless session_id
+    token = bearer_token
+    raise KinoErrors::AuthenticationError unless token
 
-    account_id = TmdbAccountService.fetch_account_id(session_id)
-    @current_user = User.find_or_create_by!(tmdb_account_id: account_id)
+    payload = JwtService.decode(token)
+    @current_user = User.find(payload[:sub])
+  rescue ActiveRecord::RecordNotFound
+    raise KinoErrors::AuthenticationError
   end
 
   def current_user

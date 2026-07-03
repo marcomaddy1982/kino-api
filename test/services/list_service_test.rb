@@ -2,7 +2,7 @@ require "test_helper"
 
 class ListServiceTest < ActiveSupport::TestCase
   setup do
-    @user = User.create!(tmdb_account_id: 999)
+    @user = User.create!(email: "user@example.com", password: "password", name: "Test User")
   end
 
   teardown do

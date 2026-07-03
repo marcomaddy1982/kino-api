@@ -2,7 +2,7 @@ require "test_helper"
 
 class ListItemBlueprintTest < ActiveSupport::TestCase
   setup do
-    @user = User.create!(tmdb_account_id: 999)
+    @user = User.create!(email: "user@example.com", password: "password", name: "Test User")
     @list = ListService.create(@user, name: "Watchlist")
     @item = ListItemService.add(@list, tmdb_movie_id: 550)
   end

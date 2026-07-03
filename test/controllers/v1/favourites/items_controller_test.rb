@@ -2,9 +2,9 @@ require "test_helper"
 
 class V1::Favourites::ItemsControllerTest < ActionDispatch::IntegrationTest
   setup do
-    @user = User.create!(tmdb_account_id: 123)
+    @user = User.create!(email: "user@example.com", password: "password", name: "Test User")
     @favourites = ListService.find_or_create_favourites(@user)
-    @headers = auth_header
+    @headers = auth_header(user: @user)
   end
 
   teardown do

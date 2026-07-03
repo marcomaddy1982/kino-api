@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_18_115042) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_03_083832) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -33,13 +33,29 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_115042) do
     t.index ["user_id"], name: "index_lists_on_user_id_favourite", unique: true, where: "(is_favourite = true)"
   end
 
+  create_table "refresh_tokens", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "device_info"
+    t.datetime "expires_at", null: false
+    t.datetime "revoked_at"
+    t.string "token_digest", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["token_digest"], name: "index_refresh_tokens_on_token_digest", unique: true
+    t.index ["user_id"], name: "index_refresh_tokens_on_user_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.datetime "created_at", null: false
-    t.integer "tmdb_account_id", null: false
+    t.string "email", null: false
+    t.string "name", null: false
+    t.string "password_digest", null: false
+    t.string "phone_number"
     t.datetime "updated_at", null: false
-    t.index ["tmdb_account_id"], name: "index_users_on_tmdb_account_id", unique: true
+    t.index ["email"], name: "index_users_on_email", unique: true
   end
 
   add_foreign_key "list_items", "lists"
   add_foreign_key "lists", "users"
+  add_foreign_key "refresh_tokens", "users", on_delete: :cascade
 end
