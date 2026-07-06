@@ -2,7 +2,7 @@ require "test_helper"
 
 class V1::ListItemsControllerTest < ActionDispatch::IntegrationTest
   setup do
-    @user = User.create!(email: "user@example.com", password: "password", name: "Test User", phone_number: "+391234567890")
+    @user = User.create!(email: "user@example.com", password: "Password1", name: "Test User", phone_number: "+391234567890")
     @list = ListService.create(@user, name: "Watchlist")
     @headers = auth_header(user: @user)
   end
@@ -36,7 +36,7 @@ class V1::ListItemsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "index returns 404 for a list belonging to another user" do
-    other_user = User.create!(email: "other@example.com", password: "password", name: "Other User", phone_number: "+391234567890")
+    other_user = User.create!(email: "other@example.com", password: "Password1", name: "Other User", phone_number: "+391234567890")
     other_list = ListService.create(other_user, name: "Other")
     get v1_list_list_items_path(other_list), headers: @headers, as: :json
 
@@ -67,7 +67,7 @@ class V1::ListItemsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create returns 404 for a list belonging to another user" do
-    other_user = User.create!(email: "other2@example.com", password: "password", name: "Other User 2", phone_number: "+391234567890")
+    other_user = User.create!(email: "other2@example.com", password: "Password1", name: "Other User 2", phone_number: "+391234567890")
     other_list = ListService.create(other_user, name: "Other")
 
     post v1_list_list_items_path(other_list), params: { tmdb_movie_id: 550 }, headers: @headers, as: :json

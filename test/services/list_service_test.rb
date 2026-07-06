@@ -2,7 +2,7 @@ require "test_helper"
 
 class ListServiceTest < ActiveSupport::TestCase
   setup do
-    @user = User.create!(email: "user@example.com", password: "password", name: "Test User", phone_number: "+391234567890")
+    @user = User.create!(email: "user@example.com", password: "Password1", name: "Test User", phone_number: "+391234567890")
   end
 
   teardown do
