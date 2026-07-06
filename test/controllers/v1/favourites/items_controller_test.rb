@@ -2,7 +2,7 @@ require "test_helper"
 
 class V1::Favourites::ItemsControllerTest < ActionDispatch::IntegrationTest
   setup do
-    @user = User.create!(email: "user@example.com", password: "password", name: "Test User")
+    @user = User.create!(email: "user@example.com", password: "password", name: "Test User", phone_number: "+391234567890")
     @favourites = ListService.find_or_create_favourites(@user)
     @headers = auth_header(user: @user)
   end

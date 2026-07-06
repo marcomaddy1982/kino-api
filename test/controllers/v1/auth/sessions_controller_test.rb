@@ -2,7 +2,7 @@ require "test_helper"
 
 class V1::Auth::SessionsControllerTest < ActionDispatch::IntegrationTest
   setup do
-    @user = User.create!(email: "existing@example.com", password: "password", name: "Existing User")
+    @user = User.create!(email: "existing@example.com", password: "password", name: "Existing User", phone_number: "+391234567890")
   end
 
   teardown do
@@ -11,7 +11,7 @@ class V1::Auth::SessionsControllerTest < ActionDispatch::IntegrationTest
 
   # POST /v1/auth/register
   test "register returns 201 with tokens and user" do
-    post v1_auth_register_path, params: { email: "new@example.com", password: "password", name: "New User" }, as: :json
+    post v1_auth_register_path, params: { email: "new@example.com", password: "password", name: "New User", phone_number: "+390987654321" }, as: :json
 
     assert_response :created
     body = JSON.parse(response.body)
@@ -19,18 +19,18 @@ class V1::Auth::SessionsControllerTest < ActionDispatch::IntegrationTest
     assert body["refreshToken"].present?
     assert_equal "new@example.com", body["user"]["email"]
     assert_equal "New User", body["user"]["name"]
-    assert_nil body["user"]["phoneNumber"]
+    assert_equal "+390987654321", body["user"]["phoneNumber"]
   ensure
     User.find_by(email: "new@example.com")&.destroy
   end
 
   test "register returns 400 on missing required field" do
-    post v1_auth_register_path, params: { email: "new@example.com", password: "password" }, as: :json
+    post v1_auth_register_path, params: { email: "new@example.com", password: "password", phone_number: "+391234567890" }, as: :json
     assert_response :bad_request
   end
 
   test "register returns 400 on duplicate email" do
-    post v1_auth_register_path, params: { email: "existing@example.com", password: "password", name: "Another" }, as: :json
+    post v1_auth_register_path, params: { email: "existing@example.com", password: "password", name: "Another", phone_number: "+391234567890" }, as: :json
     assert_response :bad_request
   end
 

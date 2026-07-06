@@ -2,7 +2,7 @@ require "test_helper"
 
 class ListItemServiceTest < ActiveSupport::TestCase
   setup do
-    @user = User.create!(email: "user@example.com", password: "password", name: "Test User")
+    @user = User.create!(email: "user@example.com", password: "password", name: "Test User", phone_number: "+391234567890")
     @list = ListService.create(@user, name: "Watchlist")
   end
 

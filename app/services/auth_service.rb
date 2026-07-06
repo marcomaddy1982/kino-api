@@ -1,6 +1,6 @@
 class AuthService
   class << self
-    def register(email:, password:, name:, phone_number: nil)
+    def register(email:, password:, name:, phone_number:)
       user = User.new(email: email, password: password, name: name, phone_number: phone_number)
       raise KinoErrors::BadRequestError unless user.save
       issue_tokens(user)

@@ -26,7 +26,7 @@ module V1
           email: params.require(:email),
           password: params.require(:password),
           name: params.require(:name),
-          phone_number: params[:phone_number]
+          phone_number: params.require(:phone_number)
         )
         render json: serialize(result), status: :created
       end
