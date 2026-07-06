@@ -19,6 +19,7 @@ class V1::Auth::SessionsControllerTest < ActionDispatch::IntegrationTest
     assert body["refreshToken"].present?
     assert_equal "new@example.com", body["user"]["email"]
     assert_equal "New User", body["user"]["name"]
+    assert_nil body["user"]["phoneNumber"]
   ensure
     User.find_by(email: "new@example.com")&.destroy
   end

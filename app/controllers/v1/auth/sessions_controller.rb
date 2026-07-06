@@ -40,7 +40,8 @@ module V1
           user: {
             id: result[:user].id,
             email: result[:user].email,
-            name: result[:user].name
+            name: result[:user].name,
+            phoneNumber: result[:user].phone_number
           }
         }
       end
