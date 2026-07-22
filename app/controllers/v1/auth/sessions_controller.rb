@@ -2,6 +2,7 @@ module V1
   module Auth
     class SessionsController < ::ApplicationController
       skip_before_action :authenticate!
+      wrap_parameters false
 
       def logout
         AuthService.logout(raw_token: params.require(:refresh_token))

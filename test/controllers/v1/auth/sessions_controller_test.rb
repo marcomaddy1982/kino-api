@@ -76,6 +76,11 @@ class V1::Auth::SessionsControllerTest < ActionDispatch::IntegrationTest
     assert_response :unauthorized
   end
 
+  test "login does not accept params wrapped under a session key" do
+    post v1_auth_login_path, params: { session: { email: "existing@example.com", password: "Password1" } }, as: :json
+    assert_response :bad_request
+  end
+
   # POST /v1/auth/refresh
   test "refresh returns 200 with new tokens" do
     result = AuthService.login(email: "existing@example.com", password: "Password1")
