@@ -1,0 +1,603 @@
+openapi: 3.0.3
+
+info:
+  title: Kino API
+  version: v1
+  description: Personal movie management API
+
+servers:
+  - url: https://kino-api.onrender.com
+    description: Production
+  - url: http://localhost:3000
+    description: Development
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        name:
+          type: string
+        phoneNumber:
+          type: string
+
+    AuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+
+    List:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        itemCount:
+          type: integer
+        isFavourite:
+          type: boolean
+
+    ListItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        posterPath:
+          type: string
+        voteAverage:
+          type: number
+        releaseDate:
+          type: string
+
+    CalendarEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+        tmdbMovieId:
+          type: integer
+        title:
+          type: string
+        posterPath:
+          type: string
+        voteAverage:
+          type: number
+        releaseDate:
+          type: string
+        scheduledOn:
+          type: string
+          format: date
+        watched:
+          type: boolean
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+
+paths:
+  # Auth
+  /v1/auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a new user
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, name, phone_number]
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+                  description: Min 8 chars, one uppercase, one number
+                name:
+                  type: string
+                phone_number:
+                  type: string
+      responses:
+        "201":
+          description: User registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Invalid params or duplicate email
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /v1/auth/login:
+    post:
+      tags: [Auth]
+      summary: Login with email and password
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /v1/auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Refresh access token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh_token]
+              properties:
+                refresh_token:
+                  type: string
+      responses:
+        "200":
+          description: New tokens issued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+                  refreshToken:
+                    type: string
+        "401":
+          description: Invalid or revoked refresh token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /v1/auth/logout:
+    delete:
+      tags: [Auth]
+      summary: Logout and revoke refresh token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh_token]
+              properties:
+                refresh_token:
+                  type: string
+      responses:
+        "204":
+          description: Logged out
+
+  # Lists
+  /v1/lists:
+    get:
+      tags: [Lists]
+      summary: Get all lists for the current user
+      responses:
+        "200":
+          description: List of lists
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/List"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    post:
+      tags: [Lists]
+      summary: Create a new list
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+      responses:
+        "201":
+          description: List created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/List"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /v1/lists/{id}:
+    delete:
+      tags: [Lists]
+      summary: Delete a list
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: List deleted
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: List not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  # List Items
+  /v1/lists/{list_id}/items:
+    get:
+      tags: [List Items]
+      summary: Get all items in a list
+      parameters:
+        - name: list_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ListItem"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: List not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    post:
+      tags: [List Items]
+      summary: Add a movie to a list
+      parameters:
+        - name: list_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tmdb_movie_id]
+              properties:
+                tmdb_movie_id:
+                  type: integer
+      responses:
+        "201":
+          description: Item added
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tmdbMovieId:
+                    type: integer
+        "400":
+          description: Already in list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /v1/lists/{list_id}/items/{id}:
+    delete:
+      tags: [List Items]
+      summary: Remove a movie from a list
+      parameters:
+        - name: list_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: TMDB movie ID
+      responses:
+        "204":
+          description: Item removed
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Item not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  # Favourites
+  /v1/favourites/items/{tmdb_movie_id}:
+    get:
+      tags: [Favourites]
+      summary: Check if a movie is in favourites
+      parameters:
+        - name: tmdb_movie_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Favourite status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isFavourite:
+                    type: boolean
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /v1/favourites/items/{tmdb_movie_id}/toggle:
+    post:
+      tags: [Favourites]
+      summary: Toggle favourite status for a movie
+      parameters:
+        - name: tmdb_movie_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Toggled
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isFavourite:
+                    type: boolean
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  # Calendar
+  /v1/calendar:
+    get:
+      tags: [Calendar]
+      summary: Get calendar entries for a month
+      parameters:
+        - name: month
+          in: query
+          required: false
+          schema:
+            type: string
+            example: "2026-07"
+          description: Month in YYYY-MM format. Defaults to current month.
+      responses:
+        "200":
+          description: Entries grouped by date
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/CalendarEntry"
+                example:
+                  "2026-07-15":
+                    - id: 1
+                      tmdbMovieId: 550
+                      title: Fight Club
+                      posterPath: /abc.jpg
+                      voteAverage: 8.4
+                      releaseDate: "1999-10-15"
+                      scheduledOn: "2026-07-15"
+                      watched: false
+        "400":
+          description: Invalid month format
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /v1/calendar/entries:
+    post:
+      tags: [Calendar]
+      summary: Add a movie to the calendar
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tmdb_movie_id, scheduled_on]
+              properties:
+                tmdb_movie_id:
+                  type: integer
+                scheduled_on:
+                  type: string
+                  format: date
+                  example: "2026-07-15"
+      responses:
+        "201":
+          description: Entry created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CalendarEntry"
+        "400":
+          description: Duplicate entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Movie not found on TMDB
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /v1/calendar/entries/{id}:
+    delete:
+      tags: [Calendar]
+      summary: Remove a calendar entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Entry removed
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Entry not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /v1/calendar/entries/{id}/toggle_watched:
+    patch:
+      tags: [Calendar]
+      summary: Toggle watched status of a calendar entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Watched status toggled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CalendarEntry"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Entry not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"

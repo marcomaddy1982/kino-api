@@ -1,4 +1,7 @@
 Rails.application.routes.draw do
+  mount Rswag::Ui::Engine => "/api-docs"
+  get "/docs/openapi.yml", to: proc { [200, { "Content-Type" => "application/yaml" }, [File.read(Rails.root.join("docs/openapi.yml"))]] }
+
   get "up" => "rails/health#show", as: :rails_health_check
 
   namespace :v1 do
