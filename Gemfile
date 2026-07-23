@@ -10,6 +10,7 @@ gem "bcrypt", "~> 3.1"
 gem "jwt", "~> 3.2"
 gem "thruster", require: false
 gem "rswag-ui"
+gem "ostruct"
 gem "bootsnap", require: false
 gem "tzinfo-data", platforms: %i[windows jruby]
 
