@@ -10,9 +10,25 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_03_083832) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_23_115431) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "calendar_entries", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "poster_path"
+    t.string "release_date"
+    t.date "scheduled_on", null: false
+    t.string "title", null: false
+    t.integer "tmdb_movie_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.decimal "vote_average", precision: 3, scale: 1
+    t.boolean "watched", default: false, null: false
+    t.index ["user_id", "scheduled_on"], name: "index_calendar_entries_on_user_id_and_scheduled_on"
+    t.index ["user_id", "tmdb_movie_id", "scheduled_on"], name: "index_calendar_entries_uniqueness", unique: true
+    t.index ["user_id"], name: "index_calendar_entries_on_user_id"
+  end
 
   create_table "list_items", force: :cascade do |t|
     t.datetime "created_at", null: false
@@ -55,6 +71,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_03_083832) do
     t.index ["email"], name: "index_users_on_email", unique: true
   end
 
+  add_foreign_key "calendar_entries", "users", on_delete: :cascade
   add_foreign_key "list_items", "lists"
   add_foreign_key "lists", "users"
   add_foreign_key "refresh_tokens", "users", on_delete: :cascade

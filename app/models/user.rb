@@ -1,6 +1,7 @@
 class User < ApplicationRecord
   has_many :lists, dependent: :destroy
   has_many :refresh_tokens, dependent: :destroy
+  has_many :calendar_entries, dependent: :destroy
 
   has_secure_password
 

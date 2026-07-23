@@ -11,6 +11,11 @@ Rails.application.routes.draw do
     resources :lists, only: [ :index, :create, :destroy ] do
       resources :list_items, only: [ :index, :create, :destroy ], path: "items"
     end
+    get    "calendar",                              to: "calendar_entries#index"
+    post   "calendar/entries",                      to: "calendar_entries#create"
+    delete "calendar/entries/:id",                  to: "calendar_entries#destroy"
+    patch  "calendar/entries/:id/toggle_watched",   to: "calendar_entries#toggle_watched"
+
     namespace :favourites do
       resources :items, only: [ :show ], param: :tmdb_movie_id
       post "items/:tmdb_movie_id/toggle", to: "items#toggle", as: :toggle_item
