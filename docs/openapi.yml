@@ -97,6 +97,74 @@ components:
         error:
           type: string
 
+    MovieSummary:
+      type: object
+      description: >
+        Proxied from TMDB unchanged. snake_case is intentional and differs from
+        the camelCase used elsewhere. Clients ignore unknown keys.
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        overview:
+          type: string
+        poster_path:
+          type: string
+          nullable: true
+          description: Relative path; prepend the TMDB image CDN base.
+        backdrop_path:
+          type: string
+          nullable: true
+        vote_average:
+          type: number
+        release_date:
+          type: string
+        genre_ids:
+          type: array
+          items:
+            type: integer
+
+    MovieListResponse:
+      type: object
+      properties:
+        page:
+          type: integer
+        total_pages:
+          type: integer
+          description: TMDB caps paging at 500.
+        total_results:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/MovieSummary"
+
+    MovieDetail:
+      allOf:
+        - $ref: "#/components/schemas/MovieSummary"
+        - type: object
+          properties:
+            runtime:
+              type: integer
+              nullable: true
+            tagline:
+              type: string
+              nullable: true
+            budget:
+              type: integer
+            revenue:
+              type: integer
+            genres:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+
 paths:
   # Auth
   /v1/auth/register:
@@ -597,6 +665,106 @@ paths:
                 $ref: "#/components/schemas/Error"
         "404":
           description: Entry not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  # Movies
+  /v1/movies:
+    get:
+      tags: [Movies]
+      summary: Discover movies (proxied from TMDB)
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: sort_by
+          in: query
+          schema:
+            type: string
+            default: primary_release_date.desc
+            enum:
+              - primary_release_date.desc
+              - primary_release_date.asc
+              - popularity.desc
+              - vote_average.desc
+      responses:
+        "200":
+          description: Movie list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MovieListResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /v1/movies/search:
+    get:
+      tags: [Movies]
+      summary: Search movies (proxied from TMDB)
+      parameters:
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+      responses:
+        "200":
+          description: Movie list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MovieListResponse"
+        "400":
+          description: Missing query
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /v1/movies/{id}:
+    get:
+      tags: [Movies]
+      summary: Movie details (proxied from TMDB)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Movie details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MovieDetail"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Movie not found
           content:
             application/json:
               schema:

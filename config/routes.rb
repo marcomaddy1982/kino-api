@@ -14,6 +14,10 @@ Rails.application.routes.draw do
     resources :lists, only: [ :index, :create, :destroy ] do
       resources :list_items, only: [ :index, :create, :destroy ], path: "items"
     end
+
+    resources :movies, only: [ :index, :show ] do
+      get :search, on: :collection
+    end
     get    "calendar",                              to: "calendar_entries#index"
     post   "calendar/entries",                      to: "calendar_entries#create"
     delete "calendar/entries/:id",                  to: "calendar_entries#destroy"
