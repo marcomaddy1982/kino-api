@@ -1,0 +1,36 @@
+require "test_helper"
+
+class TmdbMovieServiceTest < ActiveSupport::TestCase
+  test "discover requests /discover/movie with page and sort" do
+    stub = stub_tmdb("discover/movie", query: { "page" => "2", "sort_by" => "popularity.desc" })
+    TmdbMovieService.discover(page: 2, sort_by: "popularity.desc")
+    assert_requested stub
+  end
+
+  test "discover falls back to the default sort for an unknown value" do
+    stub = stub_tmdb("discover/movie", query: { "sort_by" => "primary_release_date.desc" })
+    TmdbMovieService.discover(sort_by: "bogus")
+    assert_requested stub
+  end
+
+  test "discover clamps the page to TMDB's maximum" do
+    stub = stub_tmdb("discover/movie", query: { "page" => "500" })
+    TmdbMovieService.discover(page: 9999)
+    assert_requested stub
+  end
+
+  test "search requests /search/movie with the query" do
+    stub = stub_tmdb("search/movie", query: { "query" => "dune", "page" => "1" })
+    TmdbMovieService.search(query: "dune", page: 1)
+    assert_requested stub
+  end
+
+  test "search raises BadRequestError for a blank query" do
+    assert_raises(KinoErrors::BadRequestError) { TmdbMovieService.search(query: "   ") }
+  end
+
+  test "fetch_movie raises NotFoundError on a non-success response" do
+    stub_tmdb("movie/999", status: 404, body: { status_code: 34 })
+    assert_raises(KinoErrors::NotFoundError) { TmdbMovieService.fetch_movie(999) }
+  end
+end

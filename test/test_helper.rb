@@ -27,5 +27,18 @@ module ActiveSupport
           headers: { "Content-Type" => "application/json" }
         )
     end
+
+    def stub_tmdb(path, query: {}, status: 200, body: { results: [] })
+      stub_request(:get, "#{ENV["TMDB_API_BASE_URL"]}/#{path}")
+        .with(
+          query: hash_including(query),
+          headers: { "Authorization" => "Bearer #{ENV["TMDB_ACCESS_TOKEN"]}" }
+        )
+        .to_return(
+          status: status,
+          body: body.to_json,
+          headers: { "Content-Type" => "application/json" }
+        )
+    end
   end
 end
