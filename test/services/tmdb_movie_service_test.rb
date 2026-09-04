@@ -33,4 +33,9 @@ class TmdbMovieServiceTest < ActiveSupport::TestCase
     stub_tmdb("movie/999", status: 404, body: { status_code: 34 })
     assert_raises(KinoErrors::NotFoundError) { TmdbMovieService.fetch_movie(999) }
   end
+
+  test "fetch_movie raises UpstreamError when TMDB is unreachable" do
+    stub_request(:get, "#{ENV["TMDB_API_BASE_URL"]}/movie/550").to_timeout
+    assert_raises(KinoErrors::UpstreamError) { TmdbMovieService.fetch_movie(550) }
+  end
 end

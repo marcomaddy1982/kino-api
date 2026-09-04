@@ -42,9 +42,11 @@ class V1::MoviesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Dune", JSON.parse(response.body).dig("results", 0, "title")
   end
 
-  test "search returns 400 without a query" do
+  test "search returns the Kino error body when query is missing" do
     get search_v1_movies_path, headers: @headers, as: :json
+
     assert_response :bad_request
+    assert_equal({ "error" => "Bad request" }, JSON.parse(response.body))
   end
 
   # GET /v1/movies/:id
@@ -61,5 +63,14 @@ class V1::MoviesControllerTest < ActionDispatch::IntegrationTest
     get v1_movie_path(999), headers: @headers, as: :json
 
     assert_response :not_found
+  end
+
+  test "show returns 502 with the Kino error body when TMDB is unreachable" do
+    stub_request(:get, "#{ENV["TMDB_API_BASE_URL"]}/movie/550").to_timeout
+
+    get v1_movie_path(550), headers: @headers, as: :json
+
+    assert_response :bad_gateway
+    assert_equal({ "error" => "Upstream service unavailable" }, JSON.parse(response.body))
   end
 end

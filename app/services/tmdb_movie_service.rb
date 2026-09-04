@@ -48,7 +48,8 @@ class TmdbMovieService
 
       JSON.parse(response.body)
     rescue Faraday::Error => e
-      raise StandardError, "TMDB request failed: #{e.message}"
+      Rails.logger.error("TMDB request failed: #{e.message}")
+      raise KinoErrors::UpstreamError
     end
 
     def clamp_page(page)

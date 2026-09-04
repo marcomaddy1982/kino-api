@@ -82,6 +82,15 @@ class V1::CalendarEntriesControllerTest < ActionDispatch::IntegrationTest
     assert_response :unauthorized
   end
 
+  test "create returns 502 with the Kino error body when TMDB is unreachable" do
+    stub_request(:get, "#{ENV["TMDB_API_BASE_URL"]}/movie/680").to_timeout
+
+    post "/v1/calendar/entries", params: { tmdb_movie_id: 680, scheduled_on: "2026-07-15" }, headers: @headers, as: :json
+
+    assert_response :bad_gateway
+    assert_equal({ "error" => "Upstream service unavailable" }, JSON.parse(response.body))
+  end
+
   # DELETE /v1/calendar/entries/:id
 
   test "destroy returns 204 and removes entry" do

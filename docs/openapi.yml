@@ -625,6 +625,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "502":
+          description: TMDB is unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
   /v1/calendar/entries/{id}:
     patch:
@@ -761,6 +767,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "502":
+          description: TMDB is unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
   /v1/movies/search:
     get:
@@ -796,6 +808,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "502":
+          description: TMDB is unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
   /v1/movies/{id}:
     get:
@@ -822,6 +840,12 @@ paths:
                 $ref: "#/components/schemas/Error"
         "404":
           description: Movie not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "502":
+          description: TMDB is unavailable
           content:
             application/json:
               schema:
