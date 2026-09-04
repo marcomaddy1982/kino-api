@@ -73,4 +73,12 @@ class V1::MoviesControllerTest < ActionDispatch::IntegrationTest
     assert_response :bad_gateway
     assert_equal({ "error" => "Upstream service unavailable" }, JSON.parse(response.body))
   end
+
+  test "show returns 502, not 404, when TMDB responds with a 5xx status" do
+    stub_tmdb("movie/550", status: 503, body: {})
+
+    get v1_movie_path(550), headers: @headers, as: :json
+
+    assert_response :bad_gateway
+  end
 end

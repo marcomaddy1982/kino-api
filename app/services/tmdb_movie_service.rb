@@ -44,11 +44,12 @@ class TmdbMovieService
         req.headers["Accept"] = "application/json"
       end
 
-      raise KinoErrors::NotFoundError unless response.success?
+      raise KinoErrors::NotFoundError if response.status == 404
+      raise KinoErrors::UpstreamError unless response.success?
 
       JSON.parse(response.body)
-    rescue Faraday::Error => e
-      Rails.logger.error("TMDB request failed: #{e.message}")
+    rescue Faraday::Error, JSON::ParserError, TypeError => e
+      Rails.logger.error(e.full_message(highlight: false))
       raise KinoErrors::UpstreamError
     end
 

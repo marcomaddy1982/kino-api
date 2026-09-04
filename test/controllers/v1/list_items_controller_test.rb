@@ -35,6 +35,19 @@ class V1::ListItemsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [], JSON.parse(response.body)
   end
 
+  test "index does not log at error severity when a list item is unavailable" do
+    stub_tmdb_movie(tmdb_movie_id: 550, title: "Fight Club")
+    stub_request(:get, "#{ENV["TMDB_API_BASE_URL"]}/movie/999").to_timeout
+    ListItemService.add(@list, tmdb_movie_id: 550)
+    ListItemService.add(@list, tmdb_movie_id: 999)
+
+    Rails.logger.expects(:error) # the service still logs the real failure once
+    Rails.logger.expects(:warn)  # the controller logs why it was skipped
+
+    get v1_list_list_items_path(@list), headers: @headers, as: :json
+    assert_response :ok
+  end
+
   test "index returns 404 for a list belonging to another user" do
     other_user = User.create!(email: "other@example.com", password: "Password1", name: "Other User", phone_number: "+391234567890")
     other_list = ListService.create(other_user, name: "Other")

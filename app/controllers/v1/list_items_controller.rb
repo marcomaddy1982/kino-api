@@ -5,7 +5,8 @@ module V1
     def index
       movies = @list.list_items.filter_map do |item|
         TmdbMovieService.fetch_movie(item.tmdb_movie_id)
-      rescue StandardError
+      rescue StandardError => e
+        Rails.logger.warn("Skipping unavailable list item #{item.tmdb_movie_id}: #{e.message}")
         nil
       end
       render json: movies, status: :ok
