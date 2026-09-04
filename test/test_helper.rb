@@ -12,6 +12,8 @@ require "webmock/minitest"
 
 WebMock.disable_net_connect!
 
+Rack::Attack.enabled = false
+
 module ActiveSupport
   class TestCase
     def auth_header(user:)

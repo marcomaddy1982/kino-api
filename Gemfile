@@ -6,6 +6,7 @@ gem "puma", ">= 5.0"
 gem "blueprinter", "~> 1.1"
 gem "faraday", "~> 2.0"
 gem "rack-cors"
+gem "rack-attack"
 gem "bcrypt", "~> 3.1"
 gem "jwt", "~> 3.2"
 gem "thruster", require: false
