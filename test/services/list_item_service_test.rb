@@ -30,4 +30,24 @@ class ListItemServiceTest < ActiveSupport::TestCase
   test "remove raises NotFoundError for a missing movie" do
     assert_raises(KinoErrors::NotFoundError) { ListItemService.remove(@list, tmdb_movie_id: 999) }
   end
+
+  test "fetch_movies removes the item when TMDB reports it permanently gone" do
+    item = ListItemService.add(@list, tmdb_movie_id: 550)
+    stub_tmdb("movie/550", status: 404, body: { status_code: 34 })
+
+    result = ListItemService.fetch_movies(@list)
+
+    assert_equal [], result
+    assert_not ListItem.exists?(item.id)
+  end
+
+  test "fetch_movies keeps the item when TMDB is temporarily unavailable" do
+    item = ListItemService.add(@list, tmdb_movie_id: 550)
+    stub_request(:get, "#{ENV["TMDB_API_BASE_URL"]}/movie/550").to_timeout
+
+    result = ListItemService.fetch_movies(@list)
+
+    assert_equal [], result
+    assert ListItem.exists?(item.id)
+  end
 end
