@@ -16,6 +16,16 @@ class CalendarService
       raise KinoErrors::BadRequestError
     end
 
+    def reschedule(user, id:, scheduled_on:)
+      entry = user.calendar_entries.find(id)
+      entry.update!(scheduled_on: scheduled_on)
+      entry
+    rescue ActiveRecord::RecordNotFound
+      raise KinoErrors::NotFoundError
+    rescue ActiveRecord::RecordInvalid
+      raise KinoErrors::BadRequestError
+    end
+
     def remove(user, id:)
       entry = user.calendar_entries.find(id)
       entry.destroy!

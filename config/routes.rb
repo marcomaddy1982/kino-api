@@ -20,6 +20,7 @@ Rails.application.routes.draw do
     end
     get    "calendar",                              to: "calendar_entries#index"
     post   "calendar/entries",                      to: "calendar_entries#create"
+    patch  "calendar/entries/:id",                  to: "calendar_entries#update"
     delete "calendar/entries/:id",                  to: "calendar_entries#destroy"
     patch  "calendar/entries/:id/toggle_watched",   to: "calendar_entries#toggle_watched"
 

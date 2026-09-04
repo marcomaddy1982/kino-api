@@ -20,6 +20,15 @@ module V1
       render json: CalendarEntryBlueprint.render_as_hash(entry), status: :created
     end
 
+    def update
+      entry = CalendarService.reschedule(
+        current_user,
+        id: params[:id],
+        scheduled_on: params.require(:scheduled_on)
+      )
+      render json: CalendarEntryBlueprint.render_as_hash(entry), status: :ok
+    end
+
     def destroy
       CalendarService.remove(current_user, id: params[:id])
       head :no_content

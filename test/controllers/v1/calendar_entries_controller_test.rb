@@ -109,6 +109,51 @@ class V1::CalendarEntriesControllerTest < ActionDispatch::IntegrationTest
     assert_response :unauthorized
   end
 
+  # PATCH /v1/calendar/entries/:id
+
+  test "update reschedules the entry to a new day" do
+    entry = @user.calendar_entries.create!(tmdb_movie_id: @tmdb_movie_id, scheduled_on: "2026-07-15", title: "Fight Club", poster_path: "/fight_club.jpg", vote_average: 8.4, release_date: "1999-10-15")
+
+    patch "/v1/calendar/entries/#{entry.id}", params: { scheduled_on: "2026-07-22" }, headers: @headers, as: :json
+
+    assert_response :ok
+    assert_equal "2026-07-22", JSON.parse(response.body)["scheduledOn"]
+    assert_equal Date.new(2026, 7, 22), entry.reload.scheduled_on
+  end
+
+  test "update returns 400 on an invalid date" do
+    entry = @user.calendar_entries.create!(tmdb_movie_id: @tmdb_movie_id, scheduled_on: "2026-07-15", title: "Fight Club", poster_path: "/fight_club.jpg", vote_average: 8.4, release_date: "1999-10-15")
+
+    patch "/v1/calendar/entries/#{entry.id}", params: { scheduled_on: "not-a-date" }, headers: @headers, as: :json
+
+    assert_response :bad_request
+  end
+
+  test "update returns 400 when the same movie is already scheduled on the target day" do
+    entry = @user.calendar_entries.create!(tmdb_movie_id: @tmdb_movie_id, scheduled_on: "2026-07-15", title: "Fight Club", poster_path: "/fight_club.jpg", vote_average: 8.4, release_date: "1999-10-15")
+    @user.calendar_entries.create!(tmdb_movie_id: @tmdb_movie_id, scheduled_on: "2026-07-22", title: "Fight Club", poster_path: "/fight_club.jpg", vote_average: 8.4, release_date: "1999-10-15")
+
+    patch "/v1/calendar/entries/#{entry.id}", params: { scheduled_on: "2026-07-22" }, headers: @headers, as: :json
+
+    assert_response :bad_request
+  end
+
+  test "update returns 404 on another user's entry" do
+    entry = @other_user.calendar_entries.create!(tmdb_movie_id: @tmdb_movie_id, scheduled_on: "2026-07-15", title: "Fight Club", poster_path: "/fight_club.jpg", vote_average: 8.4, release_date: "1999-10-15")
+
+    patch "/v1/calendar/entries/#{entry.id}", params: { scheduled_on: "2026-07-22" }, headers: @headers, as: :json
+
+    assert_response :not_found
+  end
+
+  test "update returns 401 without auth token" do
+    entry = @user.calendar_entries.create!(tmdb_movie_id: @tmdb_movie_id, scheduled_on: "2026-07-15", title: "Fight Club", poster_path: "/fight_club.jpg", vote_average: 8.4, release_date: "1999-10-15")
+
+    patch "/v1/calendar/entries/#{entry.id}", params: { scheduled_on: "2026-07-22" }, as: :json
+
+    assert_response :unauthorized
+  end
+
   # PATCH /v1/calendar/entries/:id/toggle_watched
 
   test "toggle_watched flips watched from false to true" do

@@ -615,6 +615,51 @@ paths:
                 $ref: "#/components/schemas/Error"
 
   /v1/calendar/entries/{id}:
+    patch:
+      tags: [Calendar]
+      summary: Reschedule a calendar entry to another day
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [scheduled_on]
+              properties:
+                scheduled_on:
+                  type: string
+                  format: date
+      responses:
+        "200":
+          description: Entry rescheduled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CalendarEntry"
+        "400":
+          description: Invalid date, or the movie is already scheduled on that day
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Entry not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
     delete:
       tags: [Calendar]
       summary: Remove a calendar entry
