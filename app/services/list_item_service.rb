@@ -12,5 +12,17 @@ class ListItemService
     rescue ActiveRecord::RecordNotFound
       raise KinoErrors::NotFoundError
     end
+
+    def fetch_movies(list)
+      list.list_items.filter_map do |item|
+        TmdbMovieService.fetch_movie(item.tmdb_movie_id)
+      rescue KinoErrors::NotFoundError
+        item.destroy
+        nil
+      rescue StandardError => e
+        Rails.logger.warn("Skipping unavailable list item #{item.tmdb_movie_id}: #{e.message}")
+        nil
+      end
+    end
   end
 end

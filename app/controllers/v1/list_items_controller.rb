@@ -3,12 +3,7 @@ module V1
     before_action :set_list
 
     def index
-      movies = @list.list_items.filter_map do |item|
-        TmdbMovieService.fetch_movie(item.tmdb_movie_id)
-      rescue StandardError
-        nil
-      end
-      render json: movies, status: :ok
+      render json: ListItemService.fetch_movies(@list), status: :ok
     end
 
     def create

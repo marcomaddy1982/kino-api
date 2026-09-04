@@ -35,6 +35,41 @@ class V1::ListItemsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [], JSON.parse(response.body)
   end
 
+  test "index does not log at error severity when a list item is unavailable" do
+    stub_tmdb_movie(tmdb_movie_id: 550, title: "Fight Club")
+    stub_request(:get, "#{ENV["TMDB_API_BASE_URL"]}/movie/999").to_timeout
+    ListItemService.add(@list, tmdb_movie_id: 550)
+    ListItemService.add(@list, tmdb_movie_id: 999)
+
+    Rails.logger.expects(:error) # the service still logs the real failure once
+    Rails.logger.expects(:warn)  # the controller logs why it was skipped
+
+    get v1_list_list_items_path(@list), headers: @headers, as: :json
+    assert_response :ok
+  end
+
+  test "index removes a list item TMDB reports as permanently gone" do
+    ListItemService.add(@list, tmdb_movie_id: 550)
+    stub_tmdb("movie/550", status: 404, body: { status_code: 34 })
+
+    get v1_list_list_items_path(@list), headers: @headers, as: :json
+
+    assert_response :ok
+    assert_equal [], JSON.parse(response.body)
+    assert_not ListItem.exists?(tmdb_movie_id: 550, list_id: @list.id)
+  end
+
+  test "index keeps a transiently-unavailable list item for a future retry" do
+    ListItemService.add(@list, tmdb_movie_id: 550)
+    stub_request(:get, "#{ENV["TMDB_API_BASE_URL"]}/movie/550").to_timeout
+
+    get v1_list_list_items_path(@list), headers: @headers, as: :json
+
+    assert_response :ok
+    assert_equal [], JSON.parse(response.body)
+    assert ListItem.exists?(tmdb_movie_id: 550, list_id: @list.id)
+  end
+
   test "index returns 404 for a list belonging to another user" do
     other_user = User.create!(email: "other@example.com", password: "Password1", name: "Other User", phone_number: "+391234567890")
     other_list = ListService.create(other_user, name: "Other")

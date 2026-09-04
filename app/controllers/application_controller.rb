@@ -1,10 +1,12 @@
 class ApplicationController < ActionController::API
   before_action :authenticate!
 
-  rescue_from KinoErrors::AuthenticationError, with: :render_unauthorized
-  rescue_from KinoErrors::NotFoundError,       with: :render_not_found
-  rescue_from KinoErrors::ForbiddenError,      with: :render_forbidden
-  rescue_from KinoErrors::BadRequestError,     with: :render_bad_request
+  rescue_from KinoErrors::AuthenticationError,    with: :render_unauthorized
+  rescue_from KinoErrors::NotFoundError,          with: :render_not_found
+  rescue_from KinoErrors::ForbiddenError,         with: :render_forbidden
+  rescue_from KinoErrors::BadRequestError,        with: :render_bad_request
+  rescue_from KinoErrors::UpstreamError,          with: :render_bad_gateway
+  rescue_from ActionController::ParameterMissing, with: :render_bad_request
 
   private
 
@@ -41,5 +43,9 @@ class ApplicationController < ActionController::API
 
   def render_bad_request
     render json: { error: "Bad request" }, status: :bad_request
+  end
+
+  def render_bad_gateway
+    render json: { error: "Upstream service unavailable" }, status: :bad_gateway
   end
 end
