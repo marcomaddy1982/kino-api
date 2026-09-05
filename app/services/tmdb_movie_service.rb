@@ -50,6 +50,7 @@ class TmdbMovieService
       JSON.parse(response.body)
     rescue Faraday::Error, JSON::ParserError, TypeError => e
       Rails.logger.error(e.full_message(highlight: false))
+      Sentry.capture_exception(e)
       raise KinoErrors::UpstreamError
     end
 

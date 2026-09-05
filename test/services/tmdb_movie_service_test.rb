@@ -64,4 +64,12 @@ class TmdbMovieServiceTest < ActiveSupport::TestCase
 
     assert_raises(KinoErrors::UpstreamError) { TmdbMovieService.fetch_movie(550) }
   end
+
+  test "reports the exception to Sentry on a TMDB failure" do
+    stub_request(:get, "#{ENV["TMDB_API_BASE_URL"]}/movie/550").to_timeout
+
+    Sentry.expects(:capture_exception)
+
+    assert_raises(KinoErrors::UpstreamError) { TmdbMovieService.fetch_movie(550) }
+  end
 end
