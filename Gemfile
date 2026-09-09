@@ -22,8 +22,6 @@ group :development, :test do
   gem "dotenv"
   gem "brakeman", require: false
   gem "bundler-audit", require: false
-  gem "standard", require: false
-  gem "rubocop-rails", require: false
   gem "rubocop-rails-omakase", require: false
 end
 
@@ -31,6 +29,4 @@ group :test do
   gem "mocha"
   gem "webmock"
   gem "simplecov", require: false
-  gem "simplecov-lcov", require: false
-  gem "shoulda-matchers"
 end
