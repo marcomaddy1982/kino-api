@@ -41,13 +41,10 @@ class CalendarService
       raise KinoErrors::NotFoundError
     end
 
-    def entries_for_month(user, year:, month:)
-      start_date = Date.new(year, month, 1)
-      end_date = start_date.end_of_month
-
+    def entries_in_range(user, from:, to:)
       user.calendar_entries
-          .where(scheduled_on: start_date..end_date)
-          .order(:scheduled_on)
+          .where(scheduled_on: from..to)
+          .order(:scheduled_on, :id)
           .group_by(&:scheduled_on)
     end
   end
