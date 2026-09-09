@@ -1,8 +1,13 @@
 module V1
   class CalendarEntriesController < ::ApplicationController
+    MAX_RANGE_DAYS = 92
+
     def index
-      year, month = parse_month(params[:month])
-      entries_by_date = CalendarService.entries_for_month(current_user, year: year, month: month)
+      from = parse_date(params.require(:from))
+      to   = parse_date(params.require(:to))
+      raise KinoErrors::BadRequestError if to < from || (to - from).to_i > MAX_RANGE_DAYS
+
+      entries_by_date = CalendarService.entries_in_range(current_user, from: from, to: to)
 
       result = entries_by_date.transform_keys(&:iso8601).transform_values do |entries|
         CalendarEntryBlueprint.render_as_hash(entries)
@@ -41,10 +46,9 @@ module V1
 
     private
 
-    def parse_month(month_param)
-      date = month_param.present? ? Date.parse("#{month_param}-01") : Date.current
-      [ date.year, date.month ]
-    rescue Date::Error
+    def parse_date(value)
+      Date.iso8601(value)
+    rescue ArgumentError, TypeError
       raise KinoErrors::BadRequestError
     end
   end

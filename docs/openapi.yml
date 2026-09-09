@@ -539,15 +539,24 @@ paths:
   /v1/calendar:
     get:
       tags: [Calendar]
-      summary: Get calendar entries for a month
+      summary: List calendar entries in a date range
       parameters:
-        - name: month
+        - name: from
           in: query
-          required: false
+          required: true
           schema:
             type: string
-            example: "2026-07"
-          description: Month in YYYY-MM format. Defaults to current month.
+            format: date
+            example: "2026-09-07"
+          description: Start date (inclusive), ISO 8601 (YYYY-MM-DD).
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+            example: "2026-09-27"
+          description: End date (inclusive), ISO 8601 (YYYY-MM-DD). The range must not exceed 92 days.
       responses:
         "200":
           description: Entries grouped by date
@@ -570,7 +579,7 @@ paths:
                       scheduledOn: "2026-07-15"
                       watched: false
         "400":
-          description: Invalid month format
+          description: Missing or malformed `from`/`to`, `to` before `from`, or range exceeds 92 days
           content:
             application/json:
               schema:

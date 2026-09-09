@@ -19,7 +19,7 @@ class V1::CalendarEntriesControllerTest < ActionDispatch::IntegrationTest
   test "index returns 200 with entries grouped by date" do
     @user.calendar_entries.create!(tmdb_movie_id: @tmdb_movie_id, scheduled_on: "2026-07-10", title: "Fight Club", poster_path: "/fight_club.jpg", vote_average: 8.4, release_date: "1999-10-15")
 
-    get "/v1/calendar", params: { month: "2026-07" }, headers: @headers
+    get "/v1/calendar", params: { from: "2026-07-01", to: "2026-07-31" }, headers: @headers
 
     assert_response :ok
     body = JSON.parse(response.body)
@@ -29,11 +29,34 @@ class V1::CalendarEntriesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "/fight_club.jpg", body["2026-07-10"].first["posterPath"]
   end
 
+  test "index returns entries spanning a month boundary" do
+    @user.calendar_entries.create!(tmdb_movie_id: @tmdb_movie_id, scheduled_on: "2026-09-30", title: "Fight Club", poster_path: "/fight_club.jpg", vote_average: 8.4, release_date: "1999-10-15")
+    @user.calendar_entries.create!(tmdb_movie_id: 278, scheduled_on: "2026-10-02", title: "Shawshank", poster_path: "/shawshank.jpg", vote_average: 9.3, release_date: "1994-10-14")
+
+    get "/v1/calendar", params: { from: "2026-09-28", to: "2026-10-04" }, headers: @headers
+
+    assert_response :ok
+    body = JSON.parse(response.body)
+    assert body.key?("2026-09-30")
+    assert body.key?("2026-10-02")
+  end
+
+  test "index orders same-day entries deterministically" do
+    first = @user.calendar_entries.create!(tmdb_movie_id: @tmdb_movie_id, scheduled_on: "2026-07-10", title: "Fight Club", poster_path: "/fight_club.jpg", vote_average: 8.4, release_date: "1999-10-15")
+    second = @user.calendar_entries.create!(tmdb_movie_id: 278, scheduled_on: "2026-07-10", title: "Shawshank", poster_path: "/shawshank.jpg", vote_average: 9.3, release_date: "1994-10-14")
+
+    get "/v1/calendar", params: { from: "2026-07-10", to: "2026-07-10" }, headers: @headers
+
+    assert_response :ok
+    ids = JSON.parse(response.body)["2026-07-10"].map { |e| e["id"] }
+    assert_equal [ first.id, second.id ], ids
+  end
+
   test "index returns only current user entries" do
     @user.calendar_entries.create!(tmdb_movie_id: @tmdb_movie_id, scheduled_on: "2026-07-10", title: "Fight Club", poster_path: "/fight_club.jpg", vote_average: 8.4, release_date: "1999-10-15")
     @other_user.calendar_entries.create!(tmdb_movie_id: 278, scheduled_on: "2026-07-10", title: "Shawshank", poster_path: "/shawshank.jpg", vote_average: 9.3, release_date: "1994-10-14")
 
-    get "/v1/calendar", params: { month: "2026-07" }, headers: @headers
+    get "/v1/calendar", params: { from: "2026-07-01", to: "2026-07-31" }, headers: @headers
 
     assert_response :ok
     body = JSON.parse(response.body)
@@ -41,13 +64,38 @@ class V1::CalendarEntriesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Fight Club", body["2026-07-10"].first["title"]
   end
 
-  test "index defaults to current month when no month param given" do
-    get "/v1/calendar", headers: @headers
+  test "index returns 400 when from or to is missing" do
+    get "/v1/calendar", params: { from: "2026-07-01" }, headers: @headers
+    assert_response :bad_request
+  end
+
+  test "index returns 400 on a malformed date" do
+    get "/v1/calendar", params: { from: "not-a-date", to: "2026-07-31" }, headers: @headers
+    assert_response :bad_request
+  end
+
+  test "index returns 400 when from is given as an array" do
+    get "/v1/calendar", params: { from: [ "2026-07-01" ], to: "2026-07-31" }, headers: @headers
+    assert_response :bad_request
+  end
+
+  test "index returns 400 when to is before from" do
+    get "/v1/calendar", params: { from: "2026-07-31", to: "2026-07-01" }, headers: @headers
+    assert_response :bad_request
+  end
+
+  test "index accepts a span of exactly 92 days" do
+    get "/v1/calendar", params: { from: "2026-01-01", to: "2026-04-03" }, headers: @headers
     assert_response :ok
   end
 
-  test "index returns 400 on invalid month format" do
-    get "/v1/calendar", params: { month: "9999-99" }, headers: @headers
+  test "index returns 400 when the span is 93 days" do
+    get "/v1/calendar", params: { from: "2026-01-01", to: "2026-04-04" }, headers: @headers
+    assert_response :bad_request
+  end
+
+  test "index returns 400 when the range exceeds 92 days" do
+    get "/v1/calendar", params: { from: "2026-01-01", to: "2026-06-01" }, headers: @headers
     assert_response :bad_request
   end
 
