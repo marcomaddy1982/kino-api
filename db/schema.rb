@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_23_115431) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_17_062641) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -23,7 +23,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_23_115431) do
     t.integer "tmdb_movie_id", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
-    t.decimal "vote_average", precision: 3, scale: 1
+    t.float "vote_average"
     t.boolean "watched", default: false, null: false
     t.index ["user_id", "scheduled_on"], name: "index_calendar_entries_on_user_id_and_scheduled_on"
     t.index ["user_id", "tmdb_movie_id", "scheduled_on"], name: "index_calendar_entries_uniqueness", unique: true

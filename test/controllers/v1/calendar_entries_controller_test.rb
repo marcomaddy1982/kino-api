@@ -27,6 +27,7 @@ class V1::CalendarEntriesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, body["2026-07-10"].length
     assert_equal "Fight Club", body["2026-07-10"].first["title"]
     assert_equal "/fight_club.jpg", body["2026-07-10"].first["posterPath"]
+    assert_kind_of Numeric, body["2026-07-10"].first["voteAverage"]
   end
 
   test "index returns entries spanning a month boundary" do
@@ -115,6 +116,8 @@ class V1::CalendarEntriesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "/fight_club.jpg", body["posterPath"]
     assert_equal false, body["watched"]
     assert_equal "2026-07-15", body["scheduledOn"]
+    assert_kind_of Numeric, body["voteAverage"]
+    assert_equal 8.4, body["voteAverage"]
   end
 
   test "create returns 400 on duplicate movie on same day" do
