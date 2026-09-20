@@ -1,6 +1,6 @@
 class MovieUserStateService
   class << self
-    def for(user, tmdb_id)
+    def for_movie(user, tmdb_id)
       {
         is_favourite: favourite?(user, tmdb_id),
         calendar_entries: calendar_entries(user, tmdb_id)
@@ -19,7 +19,8 @@ class MovieUserStateService
       user.calendar_entries
           .where(tmdb_movie_id: tmdb_id)
           .order(:scheduled_on, :id)
-          .map { |entry| { id: entry.id, scheduled_on: entry.scheduled_on, watched: entry.watched } }
+          .pluck(:id, :scheduled_on, :watched)
+          .map { |id, scheduled_on, watched| { id: id, scheduled_on: scheduled_on, watched: watched } }
     end
   end
 end

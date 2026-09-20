@@ -12,30 +12,30 @@ class MovieUserStateServiceTest < ActiveSupport::TestCase
   end
 
   test "reports nothing for a movie the user has not touched" do
-    assert_equal({ is_favourite: false, calendar_entries: [] }, MovieUserStateService.for(@user, 550))
+    assert_equal({ is_favourite: false, calendar_entries: [] }, MovieUserStateService.for_movie(@user, 550))
   end
 
   test "reports the movie as a favourite" do
     ListService.find_or_create_favourites(@user).list_items.create!(tmdb_movie_id: 550)
 
-    assert MovieUserStateService.for(@user, 550)[:is_favourite]
+    assert MovieUserStateService.for_movie(@user, 550)[:is_favourite]
   end
 
   test "ignores a regular list that contains the movie" do
     ListService.create(@user, name: "Horror").list_items.create!(tmdb_movie_id: 550)
 
-    assert_not MovieUserStateService.for(@user, 550)[:is_favourite]
+    assert_not MovieUserStateService.for_movie(@user, 550)[:is_favourite]
   end
 
   test "ignores another user's favourite" do
     ListService.find_or_create_favourites(@other_user).list_items.create!(tmdb_movie_id: 550)
 
-    assert_not MovieUserStateService.for(@user, 550)[:is_favourite]
+    assert_not MovieUserStateService.for_movie(@user, 550)[:is_favourite]
   end
 
   test "does not create the favourites list as a side effect" do
     assert_no_difference -> { List.count } do
-      MovieUserStateService.for(@user, 550)
+      MovieUserStateService.for_movie(@user, 550)
     end
   end
 
@@ -43,7 +43,7 @@ class MovieUserStateServiceTest < ActiveSupport::TestCase
     later = @user.calendar_entries.create!(tmdb_movie_id: 550, scheduled_on: "2026-09-20", title: "Fight Club")
     earlier = @user.calendar_entries.create!(tmdb_movie_id: 550, scheduled_on: "2026-09-17", title: "Fight Club", watched: true)
 
-    entries = MovieUserStateService.for(@user, 550)[:calendar_entries]
+    entries = MovieUserStateService.for_movie(@user, 550)[:calendar_entries]
 
     assert_equal [
       { id: earlier.id, scheduled_on: Date.new(2026, 9, 17), watched: true },
@@ -55,6 +55,6 @@ class MovieUserStateServiceTest < ActiveSupport::TestCase
     @user.calendar_entries.create!(tmdb_movie_id: 999, scheduled_on: "2026-09-17", title: "Other Movie")
     @other_user.calendar_entries.create!(tmdb_movie_id: 550, scheduled_on: "2026-09-17", title: "Fight Club")
 
-    assert_equal [], MovieUserStateService.for(@user, 550)[:calendar_entries]
+    assert_equal [], MovieUserStateService.for_movie(@user, 550)[:calendar_entries]
   end
 end

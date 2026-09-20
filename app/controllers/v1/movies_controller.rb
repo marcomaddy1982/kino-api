@@ -26,8 +26,8 @@ module V1
     # Secondary to the TMDB data: a failure here must not fail the whole page.
     # nil means "unknown" to the client, which is not the same as "no".
     def user_state(tmdb_id)
-      MovieUserStateService.for(current_user, tmdb_id)
-    rescue StandardError => e
+      MovieUserStateService.for_movie(current_user, tmdb_id)
+    rescue ActiveRecord::ActiveRecordError => e
       Rails.logger.error(e.full_message(highlight: false))
       nil
     end

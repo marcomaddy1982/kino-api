@@ -84,7 +84,7 @@ class V1::MoviesControllerTest < ActionDispatch::IntegrationTest
   test "show still returns the movie with user null when the user state fails" do
     stub_tmdb_movie(tmdb_movie_id: 550, title: "Fight Club")
 
-    MovieUserStateService.expects(:for).raises(ActiveRecord::StatementInvalid, "boom")
+    MovieUserStateService.expects(:for_movie).raises(ActiveRecord::StatementInvalid, "boom")
 
     get v1_movie_path(550), headers: @headers, as: :json
 
