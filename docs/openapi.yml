@@ -164,6 +164,29 @@ components:
                     type: integer
                   name:
                     type: string
+            user:
+              type: object
+              nullable: true
+              description: >
+                The current user's state for this movie. null means the state
+                could not be determined (unknown), which is not the same as
+                "not a favourite" or "not scheduled".
+              properties:
+                is_favourite:
+                  type: boolean
+                calendar_entries:
+                  type: array
+                  description: Every day this movie is scheduled on, ordered by date.
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      scheduled_on:
+                        type: string
+                        format: date
+                      watched:
+                        type: boolean
 
 paths:
   # Auth
@@ -827,7 +850,7 @@ paths:
   /v1/movies/{id}:
     get:
       tags: [Movies]
-      summary: Movie details (proxied from TMDB)
+      summary: Movie details (TMDB data plus the current user's favourite and calendar state)
       parameters:
         - name: id
           in: path

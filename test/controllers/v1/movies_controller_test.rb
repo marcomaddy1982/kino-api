@@ -58,6 +58,43 @@ class V1::MoviesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Fight Club", JSON.parse(response.body)["title"]
   end
 
+  test "show includes the user's favourite and calendar state" do
+    stub_tmdb_movie(tmdb_movie_id: 550, title: "Fight Club")
+    ListService.find_or_create_favourites(@user).list_items.create!(tmdb_movie_id: 550)
+    entry = @user.calendar_entries.create!(tmdb_movie_id: 550, scheduled_on: "2026-09-17", title: "Fight Club")
+
+    get v1_movie_path(550), headers: @headers, as: :json
+
+    assert_response :ok
+    assert_equal(
+      { "is_favourite" => true,
+        "calendar_entries" => [ { "id" => entry.id, "scheduled_on" => "2026-09-17", "watched" => false } ] },
+      JSON.parse(response.body)["user"]
+    )
+  end
+
+  test "show returns user state with no favourite and no entries by default" do
+    stub_tmdb_movie(tmdb_movie_id: 550, title: "Fight Club")
+
+    get v1_movie_path(550), headers: @headers, as: :json
+
+    assert_equal({ "is_favourite" => false, "calendar_entries" => [] }, JSON.parse(response.body)["user"])
+  end
+
+  test "show still returns the movie with user null when the user state fails" do
+    stub_tmdb_movie(tmdb_movie_id: 550, title: "Fight Club")
+
+    MovieUserStateService.expects(:for_movie).raises(ActiveRecord::StatementInvalid, "boom")
+
+    get v1_movie_path(550), headers: @headers, as: :json
+
+    assert_response :ok
+    body = JSON.parse(response.body)
+    assert_equal "Fight Club", body["title"]
+    assert body.key?("user")
+    assert_nil body["user"]
+  end
+
   test "show returns 404 when TMDB has no such movie" do
     stub_tmdb("movie/999", status: 404, body: { status_code: 34 })
     get v1_movie_path(999), headers: @headers, as: :json

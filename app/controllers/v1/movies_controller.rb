@@ -18,7 +18,18 @@ module V1
 
     def show
       movie = TmdbMovieService.fetch_movie(params[:id])
-      render json: movie, status: :ok
+      render json: movie.merge("user" => user_state(params[:id])), status: :ok
+    end
+
+    private
+
+    # Secondary to the TMDB data: a failure here must not fail the whole page.
+    # nil means "unknown" to the client, which is not the same as "no".
+    def user_state(tmdb_id)
+      MovieUserStateService.for_movie(current_user, tmdb_id)
+    rescue ActiveRecord::ActiveRecordError => e
+      Rails.logger.error(e.full_message(highlight: false))
+      nil
     end
   end
 end
