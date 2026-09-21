@@ -1,16 +1,28 @@
+module SentryConfig
+  # SENTRY_RELEASE wins, then Render's deploy commit. nil leaves Sentry's own
+  # detection in place (git, in development). The image has no .git and Sentry
+  # doesn't read Render's variable on its own, so without this events carry no
+  # release (no per-deploy regressions, no suspect commits).
+  def self.release(env = ENV)
+    env["SENTRY_RELEASE"].presence || env["RENDER_GIT_COMMIT"].presence
+  end
+end
+
 Sentry.init do |config|
   config.dsn = ENV["SENTRY_DSN"]
   config.enabled_environments = %w[production]
 
-  # Tie every event to the deploy that produced it (regression detection,
-  # suspect commits). The image has no .git, so Sentry can't detect it, and it
-  # doesn't read Render's variable on its own.
-  release = ENV["SENTRY_RELEASE"] || ENV["RENDER_GIT_COMMIT"]
+  release = SentryConfig.release
   config.release = release if release
 
   # The trail of SQL, controller actions and outgoing TMDB calls leading up to
   # an error.
   config.breadcrumbs_logger = [ :active_support_logger, :http_logger ]
+
+  # By default Sentry adds sentry-trace and baggage headers (which carry the
+  # release and DSN public key) to every outgoing request, TMDB included. No
+  # service of ours consumes them, so never propagate.
+  config.trace_propagation_targets = []
 
   # filter_parameter_logging.rb already scrubs :email, :token, :passw, etc. —
   # sentry-rails reuses Rails' own parameter filter for request context, and
