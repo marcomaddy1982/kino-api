@@ -58,6 +58,23 @@ class V1::MoviesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Fight Club", JSON.parse(response.body)["title"]
   end
 
+  test "an authenticated request tags Sentry events with the user id only" do
+    stub_tmdb_movie(tmdb_movie_id: 550, title: "Fight Club")
+    Sentry.expects(:set_user).with(id: @user.id.to_s).once
+
+    get v1_movie_path(550), headers: @headers, as: :json
+
+    assert_response :ok
+  end
+
+  test "an unauthenticated request sets no Sentry user" do
+    Sentry.expects(:set_user).never
+
+    get v1_movie_path(550), as: :json
+
+    assert_response :unauthorized
+  end
+
   test "show includes the user's favourite and calendar state" do
     stub_tmdb_movie(tmdb_movie_id: 550, title: "Fight Club")
     ListService.find_or_create_favourites(@user).list_items.create!(tmdb_movie_id: 550)

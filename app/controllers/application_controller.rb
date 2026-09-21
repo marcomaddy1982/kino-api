@@ -16,6 +16,9 @@ class ApplicationController < ActionController::API
 
     payload = JwtService.decode(token)
     @current_user = User.find(payload[:sub])
+    # Id only, no email or name: enough to count affected users and to find
+    # the reporter's errors, with send_default_pii still off.
+    Sentry.set_user(id: @current_user.id.to_s)
   rescue ActiveRecord::RecordNotFound
     raise KinoErrors::AuthenticationError
   end
