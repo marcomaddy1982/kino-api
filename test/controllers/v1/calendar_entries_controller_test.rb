@@ -128,6 +128,25 @@ class V1::CalendarEntriesControllerTest < ActionDispatch::IntegrationTest
     assert_response :bad_request
   end
 
+  test "a duplicate day's 400 logs the real reason and is not reported" do
+    @user.calendar_entries.create!(tmdb_movie_id: @tmdb_movie_id, scheduled_on: "2026-07-15", title: "Fight Club")
+    ErrorReporter.expects(:report).never
+    Rails.logger.expects(:warn).with { |msg| msg.include?("BadRequestError") && msg.include?("already added on this date") }
+
+    post "/v1/calendar/entries", params: { tmdb_movie_id: @tmdb_movie_id, scheduled_on: "2026-07-15" }, headers: @headers, as: :json
+
+    assert_response :bad_request
+  end
+
+  test "create reports a TMDB outage once" do
+    stub_tmdb("movie/551", status: 503, body: {})
+    ErrorReporter.expects(:report).with { |e| e.is_a?(KinoErrors::UpstreamError) && e.upstream_status == 503 }.once
+
+    post "/v1/calendar/entries", params: { tmdb_movie_id: 551, scheduled_on: "2026-07-15" }, headers: @headers, as: :json
+
+    assert_response :bad_gateway
+  end
+
   test "create returns 401 without auth token" do
     post "/v1/calendar/entries", params: { tmdb_movie_id: @tmdb_movie_id, scheduled_on: "2026-07-15" }, as: :json
     assert_response :unauthorized

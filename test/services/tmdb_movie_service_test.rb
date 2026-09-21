@@ -65,10 +65,28 @@ class TmdbMovieServiceTest < ActiveSupport::TestCase
     assert_raises(KinoErrors::UpstreamError) { TmdbMovieService.fetch_movie(550) }
   end
 
-  test "reports the exception to Sentry on a TMDB failure" do
+  test "a non-success response raises UpstreamError carrying its status and a fixed message" do
+    stub_tmdb("movie/550", status: 401, body: {})
+
+    error = assert_raises(KinoErrors::UpstreamError) { TmdbMovieService.fetch_movie(550) }
+
+    assert_equal 401, error.upstream_status
+    assert_equal "TMDB responded 401", error.message
+  end
+
+  test "a connection failure raises UpstreamError with the underlying error as its cause and no status" do
     stub_request(:get, "#{ENV["TMDB_API_BASE_URL"]}/movie/550").to_timeout
 
-    Sentry.expects(:capture_exception)
+    error = assert_raises(KinoErrors::UpstreamError) { TmdbMovieService.fetch_movie(550) }
+
+    assert_nil error.upstream_status
+    assert_equal "TMDB request failed", error.message
+    assert_kind_of Faraday::Error, error.cause
+  end
+
+  test "does not report to Sentry itself, so the handler reports each failure once" do
+    stub_request(:get, "#{ENV["TMDB_API_BASE_URL"]}/movie/550").to_timeout
+    Sentry.expects(:capture_exception).never
 
     assert_raises(KinoErrors::UpstreamError) { TmdbMovieService.fetch_movie(550) }
   end

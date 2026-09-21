@@ -29,6 +29,7 @@ module V1
       MovieUserStateService.for_movie(current_user, tmdb_id)
     rescue ActiveRecord::ActiveRecordError => e
       Rails.logger.error(e.full_message(highlight: false))
+      ErrorReporter.report(e)
       nil
     end
   end

@@ -45,13 +45,17 @@ class TmdbMovieService
       end
 
       raise KinoErrors::NotFoundError if response.status == 404
-      raise KinoErrors::UpstreamError unless response.success?
+
+      unless response.success?
+        raise KinoErrors::UpstreamError.new("TMDB responded #{response.status}", upstream_status: response.status)
+      end
 
       JSON.parse(response.body)
     rescue Faraday::Error, JSON::ParserError, TypeError => e
       Rails.logger.error(e.full_message(highlight: false))
-      Sentry.capture_exception(e)
-      raise KinoErrors::UpstreamError
+      # Not reported here: whoever handles the UpstreamError reports it once,
+      # with this error available as its cause.
+      raise KinoErrors::UpstreamError, "TMDB request failed"
     end
 
     def clamp_page(page)

@@ -50,4 +50,20 @@ class ListItemServiceTest < ActiveSupport::TestCase
     assert_equal [], result
     assert ListItem.exists?(item.id)
   end
+
+  test "fetch_movies reports a TMDB failure once per request, not once per item" do
+    [ 550, 551, 552 ].each { |id| ListItemService.add(@list, tmdb_movie_id: id) }
+    [ 550, 551, 552 ].each { |id| stub_tmdb("movie/#{id}", status: 503, body: {}) }
+    ErrorReporter.expects(:report).with { |e| e.is_a?(KinoErrors::UpstreamError) }.once
+
+    assert_equal [], ListItemService.fetch_movies(@list)
+  end
+
+  test "fetch_movies does not report an item TMDB says is gone" do
+    ListItemService.add(@list, tmdb_movie_id: 550)
+    stub_tmdb("movie/550", status: 404, body: { status_code: 34 })
+    ErrorReporter.expects(:report).never
+
+    ListItemService.fetch_movies(@list)
+  end
 end
