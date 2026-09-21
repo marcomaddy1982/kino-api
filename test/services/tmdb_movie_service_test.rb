@@ -49,6 +49,24 @@ class TmdbMovieServiceTest < ActiveSupport::TestCase
     assert_raises(KinoErrors::UpstreamError) { TmdbMovieService.fetch_movie(550) }
   end
 
+  test "fetch_movie raises UpstreamError when our TMDB credentials are rejected (401, 403)" do
+    [ 401, 403 ].each do |status|
+      stub_tmdb("movie/550", status: status, body: {})
+
+      error = assert_raises(KinoErrors::UpstreamError) { TmdbMovieService.fetch_movie(550) }
+      assert_equal status, error.upstream_status
+    end
+  end
+
+  test "fetch_movie raises BadRequestError, not UpstreamError, when TMDB rejects the input (400, 422)" do
+    [ 400, 422 ].each do |status|
+      stub_tmdb("movie/550", status: status, body: {})
+
+      error = assert_raises(KinoErrors::BadRequestError) { TmdbMovieService.fetch_movie(550) }
+      assert_equal "TMDB rejected the request (#{status})", error.message
+    end
+  end
+
   test "fetch_movie raises UpstreamError on a malformed response body" do
     stub_request(:get, "#{ENV["TMDB_API_BASE_URL"]}/movie/550")
       .with(headers: { "Authorization" => "Bearer #{ENV["TMDB_ACCESS_TOKEN"]}" })

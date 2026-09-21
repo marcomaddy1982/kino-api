@@ -105,6 +105,15 @@ class V1::MoviesControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  test "show returns 400 without reporting when TMDB rejects the input" do
+    stub_tmdb("movie/550", status: 422, body: {})
+    ErrorReporter.expects(:report).never
+
+    get v1_movie_path(550), headers: @headers, as: :json
+
+    assert_response :bad_request
+  end
+
   test "show reports a TMDB failure once, with the status" do
     stub_tmdb("movie/550", status: 401, body: {})
     ErrorReporter.expects(:report).with { |e| e.is_a?(KinoErrors::UpstreamError) && e.upstream_status == 401 }.once

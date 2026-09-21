@@ -20,6 +20,10 @@ class ListItemService
       rescue KinoErrors::NotFoundError
         item.destroy
         nil
+      rescue KinoErrors::BadRequestError => e
+        # TMDB rejected this item's id; keep it, but it is not an outage.
+        Rails.logger.warn("Skipping list item #{item.tmdb_movie_id}: #{e.message}")
+        nil
       rescue StandardError => e
         Rails.logger.warn("Skipping unavailable list item #{item.tmdb_movie_id}: #{e.message}")
         # Once per request, not per item: a TMDB outage would otherwise send

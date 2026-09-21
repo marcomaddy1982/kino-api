@@ -60,11 +60,13 @@ class ApplicationController < ActionController::API
   # duplicate day, an expired token...) is kept in the log. It is the
   # original error a service turned into a KinoErrors one, or the exception's
   # own message when it says more than its class name. Never sent to Sentry:
-  # these are expected errors.
+  # these are expected errors. Messages can echo request input (an id in a
+  # RecordNotFound), so control characters are stripped and the length capped
+  # to keep a crafted value from forging log lines.
   def log_reason(exception)
     reason = exception.cause || exception
     return if reason.message == reason.class.name
 
-    Rails.logger.warn("#{exception.class}: #{reason.message}")
+    Rails.logger.warn("#{exception.class}: #{reason.message.gsub(/[[:cntrl:]]+/, " ").truncate(300)}")
   end
 end

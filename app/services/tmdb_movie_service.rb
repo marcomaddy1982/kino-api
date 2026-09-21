@@ -47,6 +47,11 @@ class TmdbMovieService
       raise KinoErrors::NotFoundError if response.status == 404
 
       unless response.success?
+        # A 4xx other than auth/rate-limit means TMDB rejected what we sent,
+        # which comes from the caller's input: a 400, not an upstream outage
+        # (and not something to report to Sentry).
+        raise KinoErrors::BadRequestError, "TMDB rejected the request (#{response.status})" if rejected_input?(response.status)
+
         raise KinoErrors::UpstreamError.new("TMDB responded #{response.status}", upstream_status: response.status)
       end
 
@@ -56,6 +61,12 @@ class TmdbMovieService
       # Not reported here: whoever handles the UpstreamError reports it once,
       # with this error available as its cause.
       raise KinoErrors::UpstreamError, "TMDB request failed"
+    end
+
+    # 401/403 mean our TMDB credentials are wrong and 429 that we are rate
+    # limited: those are ours to fix, so they stay upstream failures.
+    def rejected_input?(status)
+      status.between?(400, 499) && ![ 401, 403, 429 ].include?(status)
     end
 
     def clamp_page(page)

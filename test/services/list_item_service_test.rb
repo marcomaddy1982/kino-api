@@ -59,6 +59,15 @@ class ListItemServiceTest < ActiveSupport::TestCase
     assert_equal [], ListItemService.fetch_movies(@list)
   end
 
+  test "fetch_movies keeps an item TMDB rejects as invalid and does not report it" do
+    item = ListItemService.add(@list, tmdb_movie_id: 550)
+    stub_tmdb("movie/550", status: 422, body: {})
+    ErrorReporter.expects(:report).never
+
+    assert_equal [], ListItemService.fetch_movies(@list)
+    assert ListItem.exists?(item.id)
+  end
+
   test "fetch_movies does not report an item TMDB says is gone" do
     ListItemService.add(@list, tmdb_movie_id: 550)
     stub_tmdb("movie/550", status: 404, body: { status_code: 34 })
