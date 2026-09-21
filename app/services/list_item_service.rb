@@ -14,13 +14,22 @@ class ListItemService
     end
 
     def fetch_movies(list)
+      reported = false
       list.list_items.filter_map do |item|
         TmdbMovieService.fetch_movie(item.tmdb_movie_id)
       rescue KinoErrors::NotFoundError
         item.destroy
         nil
+      rescue KinoErrors::BadRequestError => e
+        # TMDB rejected this item's id; keep it, but it is not an outage.
+        Rails.logger.warn("Skipping list item #{item.tmdb_movie_id}: #{e.message}")
+        nil
       rescue StandardError => e
         Rails.logger.warn("Skipping unavailable list item #{item.tmdb_movie_id}: #{e.message}")
+        # Once per request, not per item: a TMDB outage would otherwise send
+        # one event for every movie in the list.
+        ErrorReporter.report(e) unless reported
+        reported = true
         nil
       end
     end

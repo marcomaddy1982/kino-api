@@ -28,6 +28,14 @@ class V1::ListItemsControllerTest < ActionDispatch::IntegrationTest
     assert_includes body.map { |i| i["title"] }, "Pulp Fiction"
   end
 
+  test "a crafted list id cannot forge log lines: control characters are stripped from the logged reason" do
+    Rails.logger.expects(:warn).with { |msg| msg.include?("forged") && msg.exclude?("\n") }
+
+    get "/v1/lists/#{ERB::Util.url_encode("abc\nforged")}/items", headers: @headers, as: :json
+
+    assert_response :not_found
+  end
+
   test "index returns empty array when list has no items" do
     get v1_list_list_items_path(@list), headers: @headers, as: :json
 

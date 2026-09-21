@@ -85,6 +85,7 @@ class V1::MoviesControllerTest < ActionDispatch::IntegrationTest
     stub_tmdb_movie(tmdb_movie_id: 550, title: "Fight Club")
 
     MovieUserStateService.expects(:for_movie).raises(ActiveRecord::StatementInvalid, "boom")
+    ErrorReporter.expects(:report).with { |e| e.is_a?(ActiveRecord::StatementInvalid) }.once
 
     get v1_movie_path(550), headers: @headers, as: :json
 
@@ -95,11 +96,49 @@ class V1::MoviesControllerTest < ActionDispatch::IntegrationTest
     assert_nil body["user"]
   end
 
-  test "show returns 404 when TMDB has no such movie" do
+  test "show returns 404 when TMDB has no such movie, without reporting it" do
     stub_tmdb("movie/999", status: 404, body: { status_code: 34 })
+    ErrorReporter.expects(:report).never
+
     get v1_movie_path(999), headers: @headers, as: :json
 
     assert_response :not_found
+  end
+
+  test "show returns 400 without reporting when TMDB rejects the input" do
+    stub_tmdb("movie/550", status: 422, body: {})
+    ErrorReporter.expects(:report).never
+
+    get v1_movie_path(550), headers: @headers, as: :json
+
+    assert_response :bad_request
+  end
+
+  test "show reports a TMDB failure once, with the status" do
+    stub_tmdb("movie/550", status: 401, body: {})
+    ErrorReporter.expects(:report).with { |e| e.is_a?(KinoErrors::UpstreamError) && e.upstream_status == 401 }.once
+
+    get v1_movie_path(550), headers: @headers, as: :json
+
+    assert_response :bad_gateway
+  end
+
+  test "show reports a TMDB timeout once, with the underlying error as the cause" do
+    stub_request(:get, "#{ENV["TMDB_API_BASE_URL"]}/movie/550").to_timeout
+    ErrorReporter.expects(:report).with { |e| e.is_a?(KinoErrors::UpstreamError) && e.cause.is_a?(Faraday::Error) }.once
+
+    get v1_movie_path(550), headers: @headers, as: :json
+
+    assert_response :bad_gateway
+  end
+
+  test "a missing search query is logged with its reason and not reported" do
+    ErrorReporter.expects(:report).never
+    Rails.logger.expects(:warn).with { |msg| msg.include?("ParameterMissing") && msg.include?("query") }
+
+    get search_v1_movies_path, headers: @headers, as: :json
+
+    assert_response :bad_request
   end
 
   test "show returns 502 with the Kino error body when TMDB is unreachable" do

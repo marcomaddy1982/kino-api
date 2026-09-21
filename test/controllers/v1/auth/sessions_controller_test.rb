@@ -34,6 +34,14 @@ class V1::Auth::SessionsControllerTest < ActionDispatch::IntegrationTest
     assert_response :bad_request
   end
 
+  test "register logs why it was rejected, without echoing the values" do
+    Rails.logger.expects(:warn).with { |msg| msg.include?("Email has already been taken") && !msg.include?("existing@example.com") }
+
+    post v1_auth_register_path, params: { email: "existing@example.com", password: "Password1", name: "Another", phone_number: "+391234567890" }, as: :json
+
+    assert_response :bad_request
+  end
+
   test "register returns 400 on password too short" do
     post v1_auth_register_path, params: { email: "new@example.com", password: "Pass1", name: "New User", phone_number: "+390987654321" }, as: :json
     assert_response :bad_request
