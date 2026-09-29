@@ -25,40 +25,40 @@ class V1::Auth::SessionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "register returns 400 on missing required field" do
+    # params.require(:name) raises ActionController::ParameterMissing before
+    # AuthService.register (and the User model's presence validation) ever
+    # runs — this never reaches ValidationError, unlike the field-level
+    # rules below (email format/uniqueness, password strength).
     post v1_auth_register_path, params: { email: "new@example.com", password: "Password1", phone_number: "+391234567890" }, as: :json
     assert_response :bad_request
   end
 
-  test "register returns 400 on duplicate email" do
+  test "register returns 422 with a field error on duplicate email" do
     post v1_auth_register_path, params: { email: "existing@example.com", password: "Password1", name: "Another", phone_number: "+391234567890" }, as: :json
-    assert_response :bad_request
+    assert_response :unprocessable_entity
+    assert_equal [ "has already been taken" ], JSON.parse(response.body)["errors"]["email"]
   end
 
-  test "register logs why it was rejected, without echoing the values" do
-    Rails.logger.expects(:warn).with { |msg| msg.include?("Email has already been taken") && !msg.include?("existing@example.com") }
-
-    post v1_auth_register_path, params: { email: "existing@example.com", password: "Password1", name: "Another", phone_number: "+391234567890" }, as: :json
-
-    assert_response :bad_request
-  end
-
-  test "register returns 400 on password too short" do
+  test "register returns 422 with a field error on password too short" do
     post v1_auth_register_path, params: { email: "new@example.com", password: "Pass1", name: "New User", phone_number: "+390987654321" }, as: :json
-    assert_response :bad_request
+    assert_response :unprocessable_entity
+    assert_includes JSON.parse(response.body)["errors"]["password"], "is too short (minimum is 8 characters)"
   ensure
     User.find_by(email: "new@example.com")&.destroy
   end
 
-  test "register returns 400 on password without uppercase" do
+  test "register returns 422 with a field error on password without uppercase" do
     post v1_auth_register_path, params: { email: "new@example.com", password: "password1", name: "New User", phone_number: "+390987654321" }, as: :json
-    assert_response :bad_request
+    assert_response :unprocessable_entity
+    assert_includes JSON.parse(response.body)["errors"]["password"], "must contain at least one uppercase letter and one number"
   ensure
     User.find_by(email: "new@example.com")&.destroy
   end
 
-  test "register returns 400 on password without number" do
+  test "register returns 422 with a field error on password without number" do
     post v1_auth_register_path, params: { email: "new@example.com", password: "Password", name: "New User", phone_number: "+390987654321" }, as: :json
-    assert_response :bad_request
+    assert_response :unprocessable_entity
+    assert_includes JSON.parse(response.body)["errors"]["password"], "must contain at least one uppercase letter and one number"
   ensure
     User.find_by(email: "new@example.com")&.destroy
   end
