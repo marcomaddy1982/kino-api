@@ -25,9 +25,20 @@ class AuthServiceTest < ActiveSupport::TestCase
     assert_equal Digest::SHA256.hexdigest(result[:refresh_token]), record.token_digest
   end
 
-  test "register raises BadRequestError and creates nothing for invalid attributes" do
-    assert_raises(KinoErrors::BadRequestError) { AuthService.register(**valid_attributes.merge(password: "short")) }
+  test "register raises ValidationError and creates nothing for invalid attributes" do
+    error = assert_raises(KinoErrors::ValidationError) do
+      AuthService.register(**valid_attributes.merge(password: "short"))
+    end
+    assert_includes error.errors[:password], "is too short (minimum is 8 characters)"
     assert_nil User.find_by(email: EMAIL)
+  end
+
+  test "register raises ValidationError for a duplicate email" do
+    User.create!(valid_attributes)
+    error = assert_raises(KinoErrors::ValidationError) do
+      AuthService.register(**valid_attributes.merge(email: EMAIL.upcase))
+    end
+    assert_equal [ "has already been taken" ], error.errors[:email]
   end
 
   # login

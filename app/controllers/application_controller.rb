@@ -5,6 +5,7 @@ class ApplicationController < ActionController::API
   rescue_from KinoErrors::NotFoundError,          with: :render_not_found
   rescue_from KinoErrors::ForbiddenError,         with: :render_forbidden
   rescue_from KinoErrors::BadRequestError,        with: :render_bad_request
+  rescue_from KinoErrors::ValidationError,        with: :render_validation_error
   rescue_from KinoErrors::UpstreamError,          with: :render_bad_gateway
   rescue_from ActionController::ParameterMissing, with: :render_bad_request
 
@@ -50,6 +51,13 @@ class ApplicationController < ActionController::API
   def render_bad_request(exception)
     log_reason(exception)
     render json: { error: "Bad request" }, status: :bad_request
+  end
+
+  # Unlike the other 4xx handlers above, the reason IS the point here — these
+  # are expected user-input mistakes (invalid email, weak password, a
+  # duplicate account), not something to hide in the log.
+  def render_validation_error(exception)
+    render json: { errors: exception.errors }, status: :unprocessable_entity
   end
 
   # Unlike the 4xx handlers above, this is our dependency failing, not the

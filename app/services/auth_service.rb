@@ -2,9 +2,7 @@ class AuthService
   class << self
     def register(email:, password:, name:, phone_number:)
       user = User.new(email: email, password: password, name: name, phone_number: phone_number)
-      # The client only sees a generic 400; the reason (email taken, weak
-      # password...) is kept for the log. Validation messages hold no values.
-      raise KinoErrors::BadRequestError, user.errors.full_messages.to_sentence unless user.save
+      raise KinoErrors::ValidationError, user.errors.to_hash unless user.save
       issue_tokens(user)
     end
 

@@ -4,6 +4,17 @@ module KinoErrors
   class ForbiddenError < StandardError; end
   class BadRequestError < StandardError; end
 
+  # Carries per-field validation messages straight to the client, unlike the
+  # other 4xx errors here, whose real reason is deliberately kept server-side.
+  class ValidationError < StandardError
+    attr_reader :errors
+
+    def initialize(errors)
+      @errors = errors
+      super(errors.to_s)
+    end
+  end
+
   # A failure of a service we depend on (TMDB). upstream_status is the HTTP
   # status it answered with, or nil when there was no answer (timeout, etc.);
   # in that case the underlying error is available as #cause.
