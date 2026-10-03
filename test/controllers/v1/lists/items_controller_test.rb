@@ -1,6 +1,6 @@
 require "test_helper"
 
-class V1::ListItemsControllerTest < ActionDispatch::IntegrationTest
+class V1::Lists::ItemsControllerTest < ActionDispatch::IntegrationTest
   setup do
     @user = User.create!(email: "user@example.com", password: "Password1", name: "Test User", phone_number: "+391234567890")
     @list = ListService.create(@user, name: "Watchlist")

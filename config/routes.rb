@@ -11,18 +11,18 @@ Rails.application.routes.draw do
       post :refresh,  to: "sessions#refresh"
       delete :logout, to: "sessions#logout"
     end
-    resources :lists, only: [ :index, :create, :destroy ] do
-      resources :list_items, only: [ :index, :create, :destroy ], path: "items"
+    resources :lists, only: [ :index, :create, :destroy ], controller: "lists/lists" do
+      resources :list_items, only: [ :index, :create, :destroy ], path: "items", controller: "lists/items"
     end
 
-    resources :movies, only: [ :index, :show ] do
+    resources :movies, only: [ :index, :show ], controller: "movies/movies" do
       get :search, on: :collection
     end
-    get    "calendar",                              to: "calendar_entries#index"
-    post   "calendar/entries",                      to: "calendar_entries#create"
-    patch  "calendar/entries/:id",                  to: "calendar_entries#update"
-    delete "calendar/entries/:id",                  to: "calendar_entries#destroy"
-    patch  "calendar/entries/:id/toggle_watched",   to: "calendar_entries#toggle_watched"
+    get    "calendar",                              to: "calendar/entries#index"
+    post   "calendar/entries",                      to: "calendar/entries#create"
+    patch  "calendar/entries/:id",                  to: "calendar/entries#update"
+    delete "calendar/entries/:id",                  to: "calendar/entries#destroy"
+    patch  "calendar/entries/:id/toggle_watched",   to: "calendar/entries#toggle_watched"
 
     namespace :favourites do
       resources :items, only: [ :show ], param: :tmdb_movie_id

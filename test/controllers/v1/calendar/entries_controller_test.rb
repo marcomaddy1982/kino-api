@@ -1,6 +1,6 @@
 require "test_helper"
 
-class V1::CalendarEntriesControllerTest < ActionDispatch::IntegrationTest
+class V1::Calendar::EntriesControllerTest < ActionDispatch::IntegrationTest
   setup do
     @user = User.create!(email: "calendar@example.com", password: "Password1", name: "Calendar User", phone_number: "+391234567890")
     @other_user = User.create!(email: "other@example.com", password: "Password1", name: "Other User", phone_number: "+390987654321")
