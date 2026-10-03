@@ -1,6 +1,6 @@
 require "test_helper"
 
-class V1::ListsControllerTest < ActionDispatch::IntegrationTest
+class V1::Lists::ListsControllerTest < ActionDispatch::IntegrationTest
   setup do
     @user = User.create!(email: "user@example.com", password: "Password1", name: "Test User", phone_number: "+391234567890")
     @headers = auth_header(user: @user)

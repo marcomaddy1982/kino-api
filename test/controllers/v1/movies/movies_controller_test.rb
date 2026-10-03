@@ -1,6 +1,6 @@
 require "test_helper"
 
-class V1::MoviesControllerTest < ActionDispatch::IntegrationTest
+class V1::Movies::MoviesControllerTest < ActionDispatch::IntegrationTest
   setup do
     @user = User.create!(email: "user@example.com", password: "Password1", name: "Test User", phone_number: "+391234567890")
     @headers = auth_header(user: @user)
